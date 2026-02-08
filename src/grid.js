@@ -3,7 +3,8 @@
  *
  * Creates a clickable grid. Clicking a cell spawns a cube on it.
  * Clicking a face of an existing cube spawns a new cube adjacent to that face.
- * Drag detection prevents accidental spawns while orbiting.
+ * Right-clicking a cube removes it.
+ * Drag detection prevents accidental spawns/removals while orbiting.
  */
 import { Viewport } from './engine/Viewport.js';
 import { Scene } from './engine/Scene.js';
@@ -86,6 +87,17 @@ function placeCube(x, y, z) {
 }
 
 /**
+ * Remove a cube identified by its scene node.
+ *
+ * @param {import('./engine/Node.js').Node} node
+ */
+function removeCube(node) {
+  const key = posKey(node.position.x, node.position.y, node.position.z);
+  scene.remove(node);
+  cubes.delete(key);
+}
+
+/**
  * Resolve which face name was clicked ("front", "back", etc.).
  *
  * @param {HTMLElement} target  The event target element
@@ -153,4 +165,27 @@ viewport.el.addEventListener('click', (e) => {
 
   const pos = grid.cellToWorld(Number(cell.dataset.col), Number(cell.dataset.row));
   placeCube(pos.x, pos.y, pos.z);
+});
+
+// --- Right-click to remove a cube ---
+
+viewport.el.addEventListener('contextmenu', (e) => {
+  const cubeEl = e.target.closest('.db-cuboid');
+  if (!cubeEl) {
+    return;
+  }
+
+  // Ignore drags (user was rotating the camera)
+  const dx = e.clientX - downX;
+  const dy = e.clientY - downY;
+  if (Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+    return;
+  }
+
+  e.preventDefault();
+
+  const node = scene.findById(cubeEl.dataset.nodeId);
+  if (node) {
+    removeCube(node);
+  }
 });

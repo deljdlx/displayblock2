@@ -59,11 +59,11 @@ export class OrbitControls {
     this._startX = e.clientX;
     this._startY = e.clientY;
 
-    if (e.button === 0) {
+    if (e.button === 2) {
       this._mode = 'rotate';
       this._startRotation.x = this.viewport.cameraRotation.x;
       this._startRotation.y = this.viewport.cameraRotation.y;
-    } else if (e.button === 2) {
+    } else if (e.button === 0) {
       this._mode = 'pan';
       this._startPosition.x = this.viewport.cameraPosition.x;
       this._startPosition.y = this.viewport.cameraPosition.y;

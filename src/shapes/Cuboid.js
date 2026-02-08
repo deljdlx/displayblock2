@@ -18,7 +18,7 @@ export class Cuboid extends Node {
       const face = document.createElement('div');
       face.className = `db-face db-face--${name}`;
       face.style.position = 'absolute';
-      face.style.backfaceVisibility = 'visible';
+      face.style.backfaceVisibility = 'hidden';
       this.faces[name] = face;
       this.el.appendChild(face);
     }
