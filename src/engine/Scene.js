@@ -1,33 +1,32 @@
-export class Scene {
+import { Node } from './Node.js';
+
+export class Scene extends Node {
   constructor(name = 'default') {
+    super();
     this.name = name;
-    this.el = document.createElement('div');
-    this.el.className = 'db-scene';
-    this.el.style.position = 'absolute';
+    this.el.classList.add('db-scene');
     this.el.style.left = '50%';
     this.el.style.top = '50%';
-    this.el.style.transformStyle = 'preserve-3d';
     this.items = new Map();
   }
 
-  add(item) {
-    this.items.set(item.id, item);
-    this.el.appendChild(item.el);
+  add(child) {
+    this.items.set(child.id, child);
+    super.add(child);
     return this;
   }
 
-  remove(item) {
-    if (this.items.has(item.id)) {
-      this.items.delete(item.id);
-      if (item.el.parentNode === this.el) {
-        this.el.removeChild(item.el);
-      }
-    }
+  remove(child) {
+    this.items.delete(child.id);
+    super.remove(child);
     return this;
   }
 
   clear() {
-    this.items.forEach((item) => this.remove(item));
+    const snapshot = [...this.items.values()];
+    for (const item of snapshot) {
+      this.remove(item);
+    }
     return this;
   }
 }

@@ -30,3 +30,8 @@
 .db-face:hover {
   background: rgba(0, 255, 255, 0.2);
 }
+
+.db-link {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
+}

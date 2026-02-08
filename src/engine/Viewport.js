@@ -30,7 +30,9 @@ export class Viewport {
   removeScene(name) {
     const scene = this.scenes.get(name);
     if (scene) {
-      this.camera.removeChild(scene.el);
+      if (scene.el.parentNode === this.camera) {
+        this.camera.removeChild(scene.el);
+      }
       this.scenes.delete(name);
     }
     return this;

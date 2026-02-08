@@ -11,6 +11,7 @@ export class OrbitControls {
     this.panSensitivity = 1;
     this.zoomFactor = 1.1;
 
+    this._enabled = false;
     this._onMouseDown = this._onMouseDown.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
@@ -21,6 +22,10 @@ export class OrbitControls {
   }
 
   enable() {
+    if (this._enabled) {
+      return this;
+    }
+    this._enabled = true;
     const el = this.viewport.el;
     el.addEventListener('mousedown', this._onMouseDown);
     window.addEventListener('mousemove', this._onMouseMove);
@@ -31,6 +36,10 @@ export class OrbitControls {
   }
 
   disable() {
+    if (!this._enabled) {
+      return this;
+    }
+    this._enabled = false;
     const el = this.viewport.el;
     el.removeEventListener('mousedown', this._onMouseDown);
     window.removeEventListener('mousemove', this._onMouseMove);
@@ -38,6 +47,11 @@ export class OrbitControls {
     el.removeEventListener('wheel', this._onWheel);
     el.removeEventListener('contextmenu', this._onContextMenu);
     return this;
+  }
+
+  destroy() {
+    this.disable();
+    this.viewport = null;
   }
 
   _onMouseDown(e) {

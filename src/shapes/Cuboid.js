@@ -8,7 +8,7 @@ export class Cuboid extends Node {
     this.width = width;
     this.height = height;
     this.depth = depth;
-    this.el.className = 'db-cuboid';
+    this.el.classList.add('db-cuboid');
     this.faces = {};
     this._buildFaces();
   }
