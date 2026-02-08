@@ -14,8 +14,8 @@ export class Link extends Node {
     this.el.style.pointerEvents = 'none';
 
     this._onEndpointMove = () => this.update();
-    this.from.onMove(this._onEndpointMove);
-    this.to.onMove(this._onEndpointMove);
+    this.from.on('moved', this._onEndpointMove);
+    this.to.on('moved', this._onEndpointMove);
 
     this.update();
   }
@@ -48,8 +48,8 @@ export class Link extends Node {
   }
 
   dispose() {
-    this.from.offMove(this._onEndpointMove);
-    this.to.offMove(this._onEndpointMove);
+    this.from.off('moved', this._onEndpointMove);
+    this.to.off('moved', this._onEndpointMove);
     this.from = null;
     this.to = null;
     return this;

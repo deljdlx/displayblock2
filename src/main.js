@@ -4,9 +4,11 @@ import { Group } from './engine/Group.js';
 import { Node } from './engine/Node.js';
 import { Physics } from './engine/Physics.js';
 import { physicsConfig } from './config/physics.js';
+import { bus } from './engine/bus.js';
 import { Cube } from './shapes/Cube.js';
 import { Link } from './shapes/Link.js';
 import { OrbitControls } from './interaction/OrbitControls.js';
+import { Picking } from './interaction/Picking.js';
 import { AxisHelper } from './helpers/AxisHelper.js';
 import './styles/main.css';
 import './styles/toolbar.css';
@@ -93,6 +95,40 @@ const SCALE_FACTOR = 2;
 let exploded = false;
 let scaled = false;
 
+// --- Animation buttons disabled during physics ---
+
+const animBtns = [
+  document.getElementById('btn-explode'),
+  document.getElementById('btn-spin'),
+  document.getElementById('btn-group-spin'),
+  document.getElementById('btn-scale'),
+];
+
+bus.on('physics:start', () => {
+  ground.show();
+  for (const { cube } of cubes) {
+    cube.clearTransition();
+  }
+  for (const btn of animBtns) {
+    btn.disabled = true;
+  }
+  document.getElementById('btn-physics').classList.add('active');
+});
+
+bus.on('physics:stop', () => {
+  ground.hide();
+  for (const btn of animBtns) {
+    btn.disabled = false;
+  }
+  document.getElementById('btn-physics').classList.remove('active');
+  // Reset cubes to their grid positions
+  const f = exploded ? EXPLODE_FACTOR : 1;
+  for (const { cube, ox, oy, oz } of cubes) {
+    cube.setRotation(0, 0, 0);
+    cube.animateTo(ox * f, oy * f, oz * f, 0.8);
+  }
+});
+
 // --- Toolbar bindings ---
 
 document.getElementById('btn-axes').addEventListener('click', (e) => {
@@ -108,9 +144,6 @@ document.getElementById('btn-links').addEventListener('click', (e) => {
 });
 
 document.getElementById('btn-explode').addEventListener('click', (e) => {
-  if (physics.running) {
-    return;
-  }
   exploded = !exploded;
   const f = exploded ? EXPLODE_FACTOR : 1;
   for (const { cube, ox, oy, oz } of cubes) {
@@ -122,7 +155,7 @@ document.getElementById('btn-explode').addEventListener('click', (e) => {
 
 let spinning = false;
 document.getElementById('btn-spin').addEventListener('click', (e) => {
-  if (spinning || physics.running) {
+  if (spinning) {
     return;
   }
   spinning = true;
@@ -146,7 +179,7 @@ document.getElementById('btn-spin').addEventListener('click', (e) => {
 
 let groupSpinning = false;
 document.getElementById('btn-group-spin').addEventListener('click', (e) => {
-  if (groupSpinning || physics.running) {
+  if (groupSpinning) {
     return;
   }
   groupSpinning = true;
@@ -163,9 +196,6 @@ document.getElementById('btn-group-spin').addEventListener('click', (e) => {
 });
 
 document.getElementById('btn-scale').addEventListener('click', (e) => {
-  if (physics.running) {
-    return;
-  }
   scaled = !scaled;
   const s = scaled ? size * SCALE_FACTOR : size;
   for (const { cube } of cubes) {
@@ -176,26 +206,27 @@ document.getElementById('btn-scale').addEventListener('click', (e) => {
   e.currentTarget.textContent = scaled ? 'Shrink' : 'Scale';
 });
 
-document.getElementById('btn-physics').addEventListener('click', (e) => {
+document.getElementById('btn-physics').addEventListener('click', () => {
   if (physics.running) {
     physics.stop();
-    ground.hide();
-    e.currentTarget.classList.remove('active');
-    const f = exploded ? EXPLODE_FACTOR : 1;
-    for (const { cube, ox, oy, oz } of cubes) {
-      cube.setRotation(0, 0, 0);
-      cube.animateTo(ox * f, oy * f, oz * f, 0.8);
-    }
   } else {
-    for (const { cube } of cubes) {
-      cube.clearTransition();
-    }
-    ground.show();
     physics.start();
-    e.currentTarget.classList.add('active');
   }
 });
 
 // --- Controls ---
 
 new OrbitControls(viewport);
+
+// --- Picking ---
+
+const picking = new Picking(viewport, scene);
+
+for (const { cube } of cubes) {
+  cube.on('picked', ({ face }) => {
+    console.log(`picked ${cube.id} face=${face}`);
+  });
+  cube.on('unpicked', () => {
+    console.log(`unpicked ${cube.id}`);
+  });
+}

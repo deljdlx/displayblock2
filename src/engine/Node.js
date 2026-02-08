@@ -1,19 +1,33 @@
+/**
+ * Node — base building block of the 3D scene graph.
+ *
+ * Extends EventEmitter so every node can emit its own events:
+ *   - `moved`          after setPosition / animateTo
+ *   - `rotated`        after setRotation / animateRotation
+ *   - `visibility`     after show / hide
+ *   - `child:added`    when a child is added   (data: { child })
+ *   - `child:removed`  when a child is removed (data: { child })
+ *   - `added`          emitted on the child itself when added to a parent
+ *   - `removed`        emitted on the child itself when removed from a parent
+ */
 import { Vec3 } from './Vec3.js';
+import { EventEmitter } from './EventEmitter.js';
 
 let _uid = 0;
 
-export class Node {
+export class Node extends EventEmitter {
   constructor() {
+    super();
     this.id = `node-${++_uid}`;
     this.position = new Vec3();
     this.rotation = new Vec3();
     this.visible = true;
     this.el = document.createElement('div');
+    this.el.dataset.nodeId = this.id;
     this.el.style.position = 'absolute';
     this.el.style.transformStyle = 'preserve-3d';
     this.children = [];
     this.parent = null;
-    this._moveListeners = [];
   }
 
   // --- Hierarchy ---
@@ -25,6 +39,8 @@ export class Node {
     child.parent = this;
     this.children.push(child);
     this.el.appendChild(child.el);
+    this.emit('child:added', { child });
+    child.emit('added', { parent: this });
     return this;
   }
 
@@ -36,6 +52,8 @@ export class Node {
       if (child.el.parentNode === this.el) {
         this.el.removeChild(child.el);
       }
+      this.emit('child:removed', { child });
+      child.emit('removed', { parent: this });
     }
     return this;
   }
@@ -52,13 +70,14 @@ export class Node {
   setPosition(x, y, z) {
     this.position.set(x, y, z);
     this.updateTransform();
-    this._emitMove();
+    this.emit('moved', { node: this });
     return this;
   }
 
   setRotation(x, y, z) {
     this.rotation.set(x, y, z);
     this.updateTransform();
+    this.emit('rotated', { node: this });
     return this;
   }
 
@@ -98,12 +117,14 @@ export class Node {
   show() {
     this.el.style.display = '';
     this.visible = true;
+    this.emit('visibility', { node: this, visible: true });
     return this;
   }
 
   hide() {
     this.el.style.display = 'none';
     this.visible = false;
+    this.emit('visibility', { node: this, visible: false });
     return this;
   }
 
@@ -116,24 +137,15 @@ export class Node {
     return this;
   }
 
-  // --- Move observers ---
+  // --- Deprecated aliases (use on('moved', fn) / off('moved', fn) instead) ---
 
+  /** @deprecated Use `this.on('moved', fn)` */
   onMove(fn) {
-    this._moveListeners.push(fn);
-    return this;
+    return this.on('moved', fn);
   }
 
+  /** @deprecated Use `this.off('moved', fn)` */
   offMove(fn) {
-    const idx = this._moveListeners.indexOf(fn);
-    if (idx !== -1) {
-      this._moveListeners.splice(idx, 1);
-    }
-    return this;
-  }
-
-  _emitMove() {
-    for (const fn of this._moveListeners) {
-      fn(this);
-    }
+    return this.off('moved', fn);
   }
 }

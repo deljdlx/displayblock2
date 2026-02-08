@@ -31,6 +31,12 @@
   background: rgba(0, 255, 255, 0.2);
 }
 
+.db-selected > .db-face {
+  border-color: rgba(0, 255, 255, 0.8);
+  background: rgba(0, 255, 255, 0.18);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.4), inset 0 0 8px rgba(0, 255, 255, 0.15);
+}
+
 .db-link {
   background: rgba(255, 255, 255, 0.25);
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
@@ -46,4 +52,14 @@
     50px 50px,
     auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.db-grid-cell {
+  border: 1px solid rgba(0, 255, 255, 0.12);
+  background: rgba(0, 255, 255, 0.02);
+  transition: background 0.15s;
+}
+
+.db-grid-cell:hover {
+  background: rgba(0, 255, 255, 0.12);
 }

@@ -1,5 +1,6 @@
 import { World, Body, Box, Vec3 as CVec3, NaiveBroadphase } from 'cannon-es';
 import { physicsConfig as defaults } from '../config/physics.js';
+import { bus } from './bus.js';
 
 const RAD2DEG = 180 / Math.PI;
 
@@ -78,6 +79,7 @@ export class Physics {
     this._running = true;
     this._lastTime = performance.now();
     this._tick();
+    bus.emit('physics:start');
   }
 
   stop() {
@@ -86,6 +88,7 @@ export class Physics {
       cancelAnimationFrame(this._rafId);
       this._rafId = null;
     }
+    bus.emit('physics:stop');
   }
 
   get running() {

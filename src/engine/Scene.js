@@ -29,4 +29,35 @@ export class Scene extends Node {
     }
     return this;
   }
+
+  /**
+   * Recursively walk the scene graph, calling `callback(node)` on each node.
+   *
+   * @param {Function} callback
+   */
+  traverse(callback) {
+    const walk = (node) => {
+      callback(node);
+      for (const child of node.children) {
+        walk(child);
+      }
+    };
+    walk(this);
+  }
+
+  /**
+   * Find a node by its unique ID (e.g. "node-3").
+   *
+   * @param {string} id
+   * @returns {Node|null}
+   */
+  findById(id) {
+    let found = null;
+    this.traverse((node) => {
+      if (node.id === id) {
+        found = node;
+      }
+    });
+    return found;
+  }
 }
