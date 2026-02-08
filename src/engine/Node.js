@@ -7,6 +7,7 @@ export class Node {
     this.id = `node-${++_uid}`;
     this.position = new Vec3();
     this.rotation = new Vec3();
+    this.visible = true;
     this.el = document.createElement('div');
     this.el.style.position = 'absolute';
     this.el.style.transformStyle = 'preserve-3d';
@@ -14,6 +15,8 @@ export class Node {
     this.parent = null;
     this._moveListeners = [];
   }
+
+  // --- Hierarchy ---
 
   add(child) {
     if (child.parent) {
@@ -37,11 +40,12 @@ export class Node {
     return this;
   }
 
+  // --- Transform ---
+
   updateTransform() {
     const { x, y, z } = this.position;
     const r = this.rotation;
-    this.el.style.transform =
-      `translate3d(${x}px, ${y}px, ${z}px) rotateX(${r.x}deg) rotateY(${r.y}deg) rotateZ(${r.z}deg)`;
+    this.el.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateX(${r.x}deg) rotateY(${r.y}deg) rotateZ(${r.z}deg)`;
     return this;
   }
 
@@ -52,29 +56,13 @@ export class Node {
     return this;
   }
 
-  onMove(fn) {
-    this._moveListeners.push(fn);
-    return this;
-  }
-
-  offMove(fn) {
-    const idx = this._moveListeners.indexOf(fn);
-    if (idx !== -1) {
-      this._moveListeners.splice(idx, 1);
-    }
-    return this;
-  }
-
-  _emitMove() {
-    for (const fn of this._moveListeners) {
-      fn(this);
-    }
-  }
-
   setRotation(x, y, z) {
     this.rotation.set(x, y, z);
-    return this.updateTransform();
+    this.updateTransform();
+    return this;
   }
+
+  // --- Animation ---
 
   animateTo(x, y, z, duration = 0.5) {
     this.el.style.transition = `transform ${duration}s ease-out`;
@@ -105,13 +93,47 @@ export class Node {
     return this;
   }
 
+  // --- Visibility ---
+
   show() {
     this.el.style.display = '';
+    this.visible = true;
     return this;
   }
 
   hide() {
     this.el.style.display = 'none';
+    this.visible = false;
     return this;
+  }
+
+  toggle() {
+    if (this.visible) {
+      this.hide();
+    } else {
+      this.show();
+    }
+    return this;
+  }
+
+  // --- Move observers ---
+
+  onMove(fn) {
+    this._moveListeners.push(fn);
+    return this;
+  }
+
+  offMove(fn) {
+    const idx = this._moveListeners.indexOf(fn);
+    if (idx !== -1) {
+      this._moveListeners.splice(idx, 1);
+    }
+    return this;
+  }
+
+  _emitMove() {
+    for (const fn of this._moveListeners) {
+      fn(this);
+    }
   }
 }

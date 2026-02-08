@@ -60,6 +60,22 @@ export class Cuboid extends Node {
     return this;
   }
 
+  animateSize(width, height, depth, duration = 0.4) {
+    const transition = `width ${duration}s ease-out, height ${duration}s ease-out, transform ${duration}s ease-out`;
+    for (const name of FACE_NAMES) {
+      this.faces[name].style.transition = transition;
+    }
+    this.setSize(width, height, depth);
+    return this;
+  }
+
+  clearFaceTransition() {
+    for (const name of FACE_NAMES) {
+      this.faces[name].style.transition = '';
+    }
+    return this;
+  }
+
   setColor(color) {
     for (const name of FACE_NAMES) {
       this.faces[name].style.background = color;

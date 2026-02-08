@@ -35,3 +35,15 @@
   background: rgba(255, 255, 255, 0.25);
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
 }
+
+.db-ground {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    rgba(255, 255, 255, 0.02);
+  background-size:
+    50px 50px,
+    50px 50px,
+    auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}

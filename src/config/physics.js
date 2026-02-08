@@ -1,0 +1,16 @@
+export const physicsConfig = {
+  gravity: 800,
+  timeStep: 1 / 60,
+  maxSubSteps: 3,
+  restitution: 0.1,
+  friction: 1.5,
+  solverIterations: 20,
+  linearDamping: 0.5,
+  angularDamping: 0.8,
+  allowSleep: true,
+  sleepSpeedLimit: 1,
+  sleepTimeLimit: 0.3,
+  groundY: 150,
+  groundSize: 500,
+  defaultMass: 1,
+};

@@ -13,7 +13,6 @@ export class AxisHelper extends Node {
   constructor(length = 300, thickness = 2, step = 100) {
     super();
     this.el.classList.add('db-axis-helper');
-    this.visible = false;
 
     this._build(length, thickness, step);
     this.hide();
@@ -78,23 +77,5 @@ export class AxisHelper extends Node {
     label.style.whiteSpace = 'nowrap';
     label.style.pointerEvents = 'none';
     return label;
-  }
-
-  show() {
-    super.show();
-    this.visible = true;
-  }
-
-  hide() {
-    super.hide();
-    this.visible = false;
-  }
-
-  toggle() {
-    if (this.visible) {
-      this.hide();
-    } else {
-      this.show();
-    }
   }
 }

@@ -35,11 +35,14 @@ export class Link extends Node {
 
     // Sync transition with endpoints for smooth animation (transform + width)
     const src = this.from.el.style.transition || this.to.el.style.transition;
-    this.el.style.transition = src ? `${src}, ${src.replace('transform', 'width')}` : '';
+    if (src) {
+      this.el.style.transition = `${src}, width ${src.split(' ').slice(1).join(' ')}`;
+    } else {
+      this.el.style.transition = '';
+    }
 
     this.el.style.width = `${length}px`;
-    this.el.style.transform =
-      `translate3d(${ax}px, ${ay}px, ${az}px) rotateZ(${rz}deg) rotateY(${ry}deg)`;
+    this.el.style.transform = `translate3d(${ax}px, ${ay}px, ${az}px) rotateZ(${rz}deg) rotateY(${ry}deg)`;
 
     return this;
   }

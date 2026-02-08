@@ -5,10 +5,10 @@ export class Viewport {
     this.container = container;
 
     this.el = document.createElement('div');
-    this.el.className = 'db-viewport';
+    this.el.classList.add('db-viewport');
 
     this.camera = document.createElement('div');
-    this.camera.className = 'db-camera';
+    this.camera.classList.add('db-camera');
 
     this.cameraPosition = new Vec3(0, 0, 0);
     this.cameraRotation = new Vec3(-30, -40, 0);
@@ -42,8 +42,7 @@ export class Viewport {
     const { x, y, z } = this.cameraPosition;
     const r = this.cameraRotation;
     const s = this.zoom;
-    this.camera.style.transform =
-      `translate3d(${x}px, ${y}px, ${z}px) rotateX(${r.x}deg) rotateY(${r.y}deg) rotateZ(${r.z}deg) scale3d(${s}, ${s}, ${s})`;
+    this.camera.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateX(${r.x}deg) rotateY(${r.y}deg) rotateZ(${r.z}deg) scale3d(${s}, ${s}, ${s})`;
     return this;
   }
 }
