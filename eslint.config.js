@@ -19,6 +19,11 @@ export default [
         WheelEvent: 'readonly',
         KeyboardEvent: 'readonly',
         performance: 'readonly',
+        localStorage: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        alert: 'readonly',
+        prompt: 'readonly',
       },
     },
     rules: {

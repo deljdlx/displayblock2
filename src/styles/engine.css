@@ -11,10 +11,12 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+  pointer-events: none;
 }
 
 .db-scene {
   transform-style: preserve-3d;
+  pointer-events: none;
 }
 
 .db-cuboid {
@@ -25,6 +27,7 @@
   background: rgba(0, 255, 255, 0.08);
   border: 1px solid rgba(0, 255, 255, 0.3);
   transition: background 0.15s;
+  pointer-events: auto;
 }
 
 .db-face:hover {
@@ -58,6 +61,7 @@
   border: 1px solid rgba(0, 255, 255, 0.12);
   background: rgba(0, 255, 255, 0.02);
   transition: background 0.15s;
+  pointer-events: auto;
 }
 
 .db-grid-cell:hover {

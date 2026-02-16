@@ -1,0 +1,75 @@
+/**
+ * palette.css — Styles for the floating material palette panel.
+ *
+ * The palette is a fixed-position panel appended to document.body.
+ * It contains a draggable header and a grid of color swatches.
+ */
+
+/* --- Panel container --- */
+.mat-palette {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  background: #111118;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  font-family: monospace;
+  user-select: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Draggable header --- */
+.mat-palette__header {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  background: #1a1a24;
+  border-bottom: 1px solid #2a2a3a;
+  border-radius: 6px 6px 0 0;
+  cursor: grab;
+  color: #888;
+  font-size: 11px;
+}
+
+.mat-palette__header:active {
+  cursor: grabbing;
+}
+
+/* --- Swatch grid (4 columns) --- */
+.mat-palette__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 8px;
+}
+
+/* --- Individual swatch --- */
+.mat-palette__swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.mat-palette__swatch:hover {
+  transform: scale(1.15);
+}
+
+.mat-palette__swatch.active {
+  border-color: #ff3333;
+}
+
+/* --- Drag ghost (follows cursor during drag-to-paint) --- */
+.mat-palette__ghost {
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid #ff3333;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0.85;
+}

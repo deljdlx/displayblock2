@@ -1,0 +1,59 @@
+/* saveload.css — Styles for the Save/Load toolbar section. */
+
+/* --- Separator between toolbar sections --- */
+
+.saveload-separator {
+  width: 1px;
+  height: 22px;
+  background: #333;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* --- Slot dropdown --- */
+
+.saveload-select {
+  background: #1e1e2e;
+  color: #bbb;
+  border: 1px solid #333;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 110px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.saveload-select:hover {
+  border-color: #555;
+}
+
+.saveload-select:focus {
+  border-color: #6a6aff;
+}
+
+/* --- Toast feedback --- */
+
+.saveload-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e2e;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 13px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s ease-out;
+}
+
+.saveload-toast--fade {
+  opacity: 0;
+}

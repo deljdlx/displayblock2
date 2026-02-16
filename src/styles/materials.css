@@ -1,0 +1,52 @@
+/**
+ * materials.css — Visual materials for cuboids.
+ *
+ * Each material is a CSS class `.db-mat-{name}` applied on a `.db-cuboid`.
+ * It overrides the default face background via `.db-mat-{name} > .db-face`.
+ * Top/bottom faces get lighter/darker shades to simulate basic lighting.
+ */
+
+/* --- Glass (cyan translucide, défaut) --- */
+.db-mat-glass > .db-face { background: rgba(0, 255, 255, 0.08); }
+
+/* --- Stone (gris opaque) --- */
+.db-mat-stone > .db-face { background: rgba(120, 120, 130, 0.85); }
+.db-mat-stone > .db-face--top { background: rgba(140, 140, 150, 0.9); }
+.db-mat-stone > .db-face--bottom { background: rgba(90, 90, 100, 0.8); }
+
+/* --- Dirt (marron, herbe sur le dessus) --- */
+.db-mat-dirt > .db-face { background: rgba(120, 80, 50, 0.85); }
+.db-mat-dirt > .db-face--top { background: rgba(100, 160, 60, 0.85); }
+
+/* --- Wood (bois clair) --- */
+.db-mat-wood > .db-face { background: rgba(160, 110, 60, 0.85); }
+.db-mat-wood > .db-face--top { background: rgba(180, 130, 70, 0.9); }
+
+/* --- Water (bleu translucide) --- */
+.db-mat-water > .db-face { background: rgba(30, 100, 220, 0.45); }
+
+/* --- Lava (rouge/orange incandescent) --- */
+.db-mat-lava > .db-face { background: rgba(220, 60, 20, 0.85); }
+.db-mat-lava > .db-face--top { background: rgba(255, 160, 20, 0.9); }
+
+/* --- Sand (beige chaud) --- */
+.db-mat-sand > .db-face { background: rgba(210, 190, 140, 0.85); }
+.db-mat-sand > .db-face--top { background: rgba(230, 210, 160, 0.9); }
+
+/* --- Ice (bleu pâle translucide) --- */
+.db-mat-ice > .db-face { background: rgba(180, 220, 255, 0.5); }
+
+/* --- Gold (jaune métallique) --- */
+.db-mat-gold > .db-face { background: rgba(255, 200, 50, 0.85); }
+.db-mat-gold > .db-face--bottom { background: rgba(180, 140, 30, 0.8); }
+
+/* --- Obsidian (noir profond) --- */
+.db-mat-obsidian > .db-face { background: rgba(20, 15, 30, 0.92); }
+
+/* --- Brick (rouge brique) --- */
+.db-mat-brick > .db-face { background: rgba(160, 60, 50, 0.85); }
+
+/* --- Snow (blanc pur) --- */
+.db-mat-snow > .db-face { background: rgba(240, 245, 255, 0.9); }
+.db-mat-snow > .db-face--top { background: rgba(250, 252, 255, 0.95); }
+.db-mat-snow > .db-face--bottom { background: rgba(220, 230, 245, 0.85); }

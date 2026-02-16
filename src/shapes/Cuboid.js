@@ -3,14 +3,41 @@ import { Node } from '../engine/Node.js';
 const FACE_NAMES = ['front', 'back', 'right', 'left', 'top', 'bottom'];
 
 export class Cuboid extends Node {
+  /**
+   * @type {string|null} Current material name (e.g. 'glass', 'stone')
+   */
+  _material;
+
   constructor(width = 40, height = 40, depth = 40) {
     super();
+    this._material = null;
     this.width = width;
     this.height = height;
     this.depth = depth;
     this.el.classList.add('db-cuboid');
     this.faces = {};
     this._buildFaces();
+  }
+
+  /** @returns {string|null} The current material name. */
+  get material() {
+    return this._material;
+  }
+
+  /**
+   * Apply a CSS material class to this cuboid.
+   * Removes any previous material class before adding the new one.
+   *
+   * @param {string} name  Material identifier (e.g. 'glass', 'stone')
+   * @returns {this}
+   */
+  setMaterial(name) {
+    if (this._material) {
+      this.el.classList.remove(`db-mat-${this._material}`);
+    }
+    this._material = name;
+    this.el.classList.add(`db-mat-${name}`);
+    return this;
   }
 
   _buildFaces() {

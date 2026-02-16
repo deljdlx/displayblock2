@@ -27,9 +27,9 @@ export class Grid extends Node {
     // Lie flat on the ground plane (rotate 90° on X, same as ground in main.js)
     this.setRotation(90, 0, 0);
 
-    // Override Node's preserve-3d: cells are all coplanar, so flat mode
-    // gives reliable hover/click hit-testing in the browser.
-    this.el.style.transformStyle = 'flat';
+    // Keep preserve-3d (inherited from Node): the browser does per-cell
+    // 3D hit-testing, which stays accurate at every camera angle.
+    // ('flat' would flatten into a 2D box that misses cells near the horizon.)
 
     // Center the grid via negative margin
     this.el.style.width = `${totalW}px`;
