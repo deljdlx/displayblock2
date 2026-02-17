@@ -17,6 +17,8 @@ export class Grid extends Node {
   constructor(cols = 50, rows = 50, cellSize = 20) {
     super();
 
+    this.el.classList.add('db-grid');
+
     this._cols = cols;
     this._rows = rows;
     this._cellSize = cellSize;
@@ -47,6 +49,9 @@ export class Grid extends Node {
     // Ajoute une feuille de style pour les cellules avec les propriétés 3D correctes
     const style = document.createElement('style');
     style.textContent = `
+      .db-grid {
+        pointer-events: auto;
+      }
       .db-grid-cell {
         position: absolute;
         cursor: pointer;

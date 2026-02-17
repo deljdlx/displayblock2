@@ -171,8 +171,6 @@ export class ShootGame {
         this._viewport = new Viewport(app);
         this._scene = new Scene('shoot');
         this._viewport.addScene(this._scene);
-        this._viewport.camera.style.pointerEvents = 'auto';
-        this._scene.el.style.pointerEvents = 'auto';
 
         this._columns = GRID_CONFIG.columns;
         this._rows = GRID_CONFIG.rows;
@@ -231,7 +229,8 @@ export class ShootGame {
             this._fireFireworksBurst();
         });
 
-        // Ajoute l'écouteur de clic sur le viewport (pas la grille) pour les missiles qui tombent
+        // Ajoute l'écouteur de clic sur viewport (avant db-camera dans la hiérarchie)
+        // Les événements passent même si db-camera a pointer-events: none
         this._viewport.el.addEventListener('pointerdown', (event) => {
             this._handleGridClick(event);
         });
@@ -312,10 +311,8 @@ export class ShootGame {
      * @returns {void}
      */
     _disableGridPointerEvents() {
-        this._grid.el.style.pointerEvents = 'none';
-        // Note: Do NOT disable pointer events on grid cells themselves
-        // Grid cells need to remain interactive for click detection
-        // Events bubble up to viewport listener for handling
+        // Grid pointer events managed by CSS rules
+        // .db-grid-cell has pointer-events: auto !important
     }
 
     /**
