@@ -16,7 +16,7 @@ import { ProjectileSystem } from './ProjectileSystem.js';
 import { TargetingSystem } from './TargetingSystem.js';
 import { TargetCube } from './TargetCube.js';
 import {
-    GRID_CONFIG, CUBE_POSITIONS, COLORS, ANIMATION_CONFIG, MISSILE_CONFIGS, SIZE_FACTORS,
+    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, GRID_LAYOUT,
 } from './config/Constants.js';
 
 export class ShootGame {
@@ -59,6 +59,12 @@ export class ShootGame {
      * @type {Cube}
      */
     _obstacle;
+
+    /**
+     * @type {Map<string, Cube>}
+     * Référence à tous les cubes de la scène indexés par clé du layout
+     */
+    _cubes;
 
     /**
      * @type {AnimationClock}
@@ -135,10 +141,8 @@ export class ShootGame {
         this._scene.add(this._grid);
         this._disableGridPointerEvents();
 
-        this._leftCube = this._createCube(COLORS.leftShooter);
-        this._rightCube = this._createCube(COLORS.rightShooter);
-        this._enemies = [this._createCube(COLORS.enemy), this._createCube(COLORS.enemy)];
-        this._obstacle = this._createObstacle();
+        this._cubes = new Map();
+        this._initializeGridCubes();
 
         this._missileConfigs = {
             default: MISSILE_CONFIGS.default,
@@ -176,52 +180,51 @@ export class ShootGame {
     }
 
     /**
-     * @param {string} color
+     * Initialise tous les cubes depuis le descripteur de grille GRID_LAYOUT.
+     * Crée les cubes avec leur taille et couleur, les ajoute à la scène.
+     * Stocke les références par clé pour accès facile.
+     * @returns {void}
+     */
+    _initializeGridCubes() {
+        for (const [key, descriptor] of Object.entries(GRID_LAYOUT)) {
+            const cube = this._createCubeFromDescriptor(descriptor);
+            this._cubes.set(key, cube);
+        }
+
+        // Aliases pour accès facile aux cubes nommés
+        this._leftCube = this._cubes.get('leftShooter');
+        this._rightCube = this._cubes.get('rightShooter');
+        this._obstacle = this._cubes.get('obstacle');
+        this._enemies = [
+            this._cubes.get('enemyTop'),
+            this._cubes.get('enemyBottom'),
+        ];
+    }
+
+    /**
+     * Crée un cube selon un descripteur du layout.
+     * @param {Object} descriptor - Descripteur avec color, sizeScale, etc.
      * @returns {Cube}
      */
-    _createCube(color) {
-        const cube = new Cube(this._cellSize);
-        cube.setColor(color);
+    _createCubeFromDescriptor(descriptor) {
+        const size = this._cellSize * descriptor.sizeScale;
+        const cube = new Cube(size);
+        cube.setColor(descriptor.color);
         this._scene.add(cube);
         return cube;
     }
 
     /**
-     * Creates a large red obstacle cube at grid center.
-     * Serves as visual element and interactive fireworks trigger.
-     * @returns {Cube}
-     */
-    _createObstacle() {
-        const obstacleSize = this._cellSize * SIZE_FACTORS.obstacleScale;
-        const obstacle = new Cube(obstacleSize);
-        obstacle.setColor(COLORS.obstacle);
-        this._scene.add(obstacle);
-        return obstacle;
-    }
-
-    /**
-     * Positionne tous les cubes selon la grille.
-     * Left/Right shooters aux bords, enemies au centre, obstacle au centre exact.
+     * Positionne tous les cubes selon le descripteur GRID_LAYOUT.
+     * Convertit les coordonnées grid (col, row) en world coordinates.
      * @returns {void}
      */
     _positionCubes() {
-        const leftCubePosition = this._grid.cellToWorld(CUBE_POSITIONS.leftEdge, CUBE_POSITIONS.centerRow);
-        const rightCubePosition = this._grid.cellToWorld(CUBE_POSITIONS.rightEdge, CUBE_POSITIONS.centerRow);
-
-        this._leftCube.setPosition(leftCubePosition.x, leftCubePosition.y, leftCubePosition.z);
-        this._rightCube.setPosition(rightCubePosition.x, rightCubePosition.y, rightCubePosition.z);
-
-        const innerTopPosition = this._grid.cellToWorld(CUBE_POSITIONS.centerColumn, CUBE_POSITIONS.enemyTopRow);
-        const innerBottomPosition = this._grid.cellToWorld(
-            CUBE_POSITIONS.centerColumn,
-            CUBE_POSITIONS.enemyBottomRow,
-        );
-
-        this._enemies[0].setPosition(innerTopPosition.x, innerTopPosition.y, innerTopPosition.z);
-        this._enemies[1].setPosition(innerBottomPosition.x, innerBottomPosition.y, innerBottomPosition.z);
-
-        const obstaclePosition = this._grid.cellToWorld(CUBE_POSITIONS.centerColumn, CUBE_POSITIONS.centerRow);
-        this._obstacle.setPosition(obstaclePosition.x, obstaclePosition.y, obstaclePosition.z);
+        for (const [key, descriptor] of Object.entries(GRID_LAYOUT)) {
+            const cube = this._cubes.get(key);
+            const worldPos = this._grid.cellToWorld(descriptor.column, descriptor.row);
+            cube.setPosition(worldPos.x, worldPos.y, worldPos.z);
+        }
     }
 
     /**
