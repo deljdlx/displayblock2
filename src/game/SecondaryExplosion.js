@@ -1,7 +1,10 @@
 /**
- * SecondaryExplosion.js — Crée la cascade de missiles et cubes suite à un impact de missile joueur.
- * Génère 10 missiles et 10 TargetCube dans un rayon de 3 cellules autour du point d'impact.
+ * SecondaryExplosion.js — Crée la cascade de cubes suite à un impact de missile joueur.
+ * Les 10 cubes se placent dans une grille 2x2 avec modulo 4 pour les positions.
  */
+
+// Nombre de positions par étage dans la grille (configurable)
+export const POSITIONS_PER_LEVEL = 4;
 
 export class SecondaryExplosion {
     /**
@@ -29,35 +32,17 @@ export class SecondaryExplosion {
     }
 
     /**
-     * Génère 10 positions aléatoires dans un rayon de 3 cellules autour du point d'impact.
+     * Retourne la position locale (0-3) dans la grille 2x2 basée sur l'index du cube.
+     * 0 = haut-gauche, 1 = haut-droite, 2 = bas-gauche, 3 = bas-droite
      * 
-     * @param {number} impactCol - Colonne de l'impact
-     * @param {number} impactRow - Ligne de l'impact
-     * @param {number} radius - Rayon en cellules (par défaut: 3)
-     * @param {number} cols - Nombre de colonnes de la grille
-     * @param {number} rows - Nombre de lignes de la grille
-     * @returns {Array<{col: number, row: number}>}
+     * @param {number} cubeIndex - Index du cube (0-9)
+     * @returns {{subCol: number, subRow: number}}
      */
-    static generateRandomPositions(impactCol, impactRow, radius, cols, rows) {
-        const positions = [];
-        const count = 10;
-
-        for (let i = 0; i < count; i++) {
-            // Rayon aléatoire: entre 0 et radius cellules
-            const distance = Math.random() * radius;
-            // Angle aléatoire: 0 à 2π
-            const angle = Math.random() * Math.PI * 2;
-
-            // Calcule la position (col, row) basée sur distance et angle
-            const deltaCol = Math.round(Math.cos(angle) * distance);
-            const deltaRow = Math.round(Math.sin(angle) * distance);
-
-            const col = Math.max(0, Math.min(cols - 1, impactCol + deltaCol));
-            const row = Math.max(0, Math.min(rows - 1, impactRow + deltaRow));
-
-            positions.push({ col, row });
-        }
-
-        return positions;
+    static getSubPosition(cubeIndex) {
+        const pos = cubeIndex % POSITIONS_PER_LEVEL;
+        return {
+            subCol: pos % 2,
+            subRow: Math.floor(pos / 2),
+        };
     }
 }

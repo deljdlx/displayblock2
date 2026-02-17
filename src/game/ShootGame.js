@@ -366,19 +366,31 @@ export class ShootGame {
             const targetCube = new TargetCube();
             const randomCol = Math.floor(Math.random() * this._columns);
             const randomRow = Math.floor(Math.random() * this._rows);
-            
+
+            // Taille identique aux cubes d'explosion secondaire: cellSize/2 - 2px de marge
+            const newCubeSize = (this._cellSize / 2) - 2;
+            targetCube.getCube().setSize(newCubeSize, newCubeSize, newCubeSize);
+
             // Ajoute le cube à la cellule de la grille
             const stackIndex = this._cellManager.addCubeToCell(randomCol, randomRow, targetCube.getCube(), targetCube.getType());
             targetCube.placeInCell(randomCol, randomRow, stackIndex);
-            
-            // Mémorise la position 3D
-            this._updateCubePosition3D(targetCube);
-            
+
+            // Sous-position dans la grille 2x2 (même logique que _createSecondaryExplosion)
+            const subPos = SecondaryExplosion.getSubPosition(stackIndex);
+            const level = Math.floor(stackIndex / 4);
+
+            this._updateCubePosition3DWithSubPosition(
+                targetCube,
+                subPos.subCol,
+                subPos.subRow,
+                level,
+            );
+
             this._scene.add(targetCube.getCube());
-            
+
             // Notifie le compteur qu'un cube cible a été créé
             this._cubeCounter.increment(targetCube.getType());
-            
+
             this._projectileSystem.fire(this._obstacle, targetCube.getCube(), this._missileConfigs.default);
         }
     }
@@ -396,11 +408,56 @@ export class ShootGame {
         
         const worldPos = this._grid.cellToWorld(col, row);
         
-        // Calcule la hauteur Y en fonction de l'indice dans la pile
+        // Hauteur: le centre du cube doit être à -(cubeSize/2) pour reposer sur la grille (Y négatif = au-dessus)
+        // L'empilement va vers le haut (Y de plus en plus négatif)
         const cubeSize = this._cellSize * SIZE_FACTORS.targetCube;
-        const stackHeight = stackIndex * cubeSize;
-        
+        const baseHeight = -(cubeSize / 2);
+        const stackHeight = baseHeight - (stackIndex * cubeSize);
+
         targetCube.getCube().setPosition(worldPos.x, stackHeight, worldPos.z);
+    }
+
+    /**
+     * Met à jour la position 3D d'un cube cible au sein d'une grille 2x2 dans sa cellule.
+     * Positionne les 4 cubes aux 4 quadrants autour du centre de la cellule.
+     * 
+     * @param {TargetCube} targetCube - Le cube cible
+     * @param {number} subCol - Colonne dans la grille 2x2 (0 ou 1)
+     * @param {number} subRow - Ligne dans la grille 2x2 (0 ou 1)
+     * @param {number} stackIndex - Indice du cube dans la pile (étage)
+     * @returns {void}
+     * @private
+     */
+    _updateCubePosition3DWithSubPosition(targetCube, subCol, subRow, stackIndex) {
+        const col = targetCube.getGridColumn();
+        const row = targetCube.getGridRow();
+
+        const worldPos = this._grid.cellToWorld(col, row);
+
+        // Tailles
+        const cubeSize = targetCube.getCube().width; // 18px
+        const margin = 2; // 2px de marge
+        
+        // Distance entre les centres des cubes adjacents = taille + marge
+        const spacing = cubeSize + margin; // 18 + 2 = 20
+
+        // Positions des 4 cubes en grille 2x2
+        const offsetX = (subCol - 0.5) * spacing;
+        const offsetZ = (subRow - 0.5) * spacing;
+
+        // Hauteur: le centre du cube doit être à -(cubeSize/2) pour reposer sur la grille (Y négatif = au-dessus)
+        // L'empilement va vers le haut (Y de plus en plus négatif)
+        const baseHeight = -(cubeSize / 2);
+        const stackHeight = baseHeight - (stackIndex * cubeSize);
+
+        const finalX = worldPos.x + offsetX;
+        const finalZ = worldPos.z + offsetZ;
+
+        targetCube.getCube().setPosition(
+            finalX,
+            stackHeight,
+            finalZ,
+        );
     }
 
     /**
@@ -410,6 +467,11 @@ export class ShootGame {
      * @private
      */
     _handleGridClick(event) {
+        // Ignore si ce n'est pas le bouton gauche (button=0 pour gauche)
+        if (event.button !== 0) {
+            return;
+        }
+
         event.preventDefault();
         event.stopPropagation();
 
@@ -509,16 +571,52 @@ export class ShootGame {
      * @private
      */
     _createSecondaryExplosion(impactX, impactZ) {
-        // Génère 10 positions aléatoires dans un rayon de 3 cellules
-        const positions = SecondaryExplosion.generateRandomPositions(
-            Math.round((impactX + this._columns * this._cellSize / 2) / this._cellSize - 0.5),
-            Math.round((impactZ + this._rows * this._cellSize / 2) / this._cellSize - 0.5),
-            3,
+        // Convertit la position d'impact world en coordonnées grille
+        const impact = SecondaryExplosion.worldToCell(
+            impactX,
+            impactZ,
             this._columns,
             this._rows,
+            this._cellSize,
         );
 
-        // Crée un objet "source" temporaire au point d'impact pour les tirs de projectiles
+        // Crée UN SEUL TargetCube dans la cellule d'impact
+        const targetCube = new TargetCube();
+
+        // Définit la taille du cube: cellSize/2 - 2px de marge
+        const newCubeSize = (this._cellSize / 2) - 2;
+        targetCube.getCube().setSize(newCubeSize, newCubeSize, newCubeSize);
+
+        // Ajoute le cube à la cellule d'impact
+        const stackIndex = this._cellManager.addCubeToCell(
+            impact.col,
+            impact.row,
+            targetCube.getCube(),
+            targetCube.getType(),
+        );
+        targetCube.placeInCell(impact.col, impact.row, stackIndex);
+
+        // Récupère la sous-position dans la grille 2x2 basée sur stackIndex
+        const subPos = SecondaryExplosion.getSubPosition(stackIndex);
+
+        // Calcule le niveau d'empilement: 0-3 → niveau 0, 4-7 → niveau 1, 8-9 → niveau 2
+        const level = Math.floor(stackIndex / 4);
+
+        // Positionne le cube dans la scène
+        this._updateCubePosition3DWithSubPosition(
+            targetCube,
+            subPos.subCol,
+            subPos.subRow,
+            level,
+        );
+
+        // Ajoute à la scène
+        this._scene.add(targetCube.getCube());
+
+        // Notifie le compteur qu'un cube cible a été créé
+        this._cubeCounter.increment(targetCube.getType());
+
+        // Lance un projectile depuis le point d'impact vers ce TargetCube
         const impactSource = {
             position: {
                 x: impactX,
@@ -529,31 +627,6 @@ export class ShootGame {
             onTransitionEnd: () => {},
             clearFaceTransition: () => {},
         };
-
-        // Crée 10 TargetCube et tire vers eux
-        for (let i = 0; i < positions.length; i += 1) {
-            const pos = positions[i];
-            const targetCube = new TargetCube();
-
-            // Ajoute le cube à la cellule de la grille
-            const stackIndex = this._cellManager.addCubeToCell(
-                pos.col,
-                pos.row,
-                targetCube.getCube(),
-                targetCube.getType(),
-            );
-            targetCube.placeInCell(pos.col, pos.row, stackIndex);
-
-            // Mémorise la position 3D
-            this._updateCubePosition3D(targetCube);
-
-            this._scene.add(targetCube.getCube());
-
-            // Notifie le compteur qu'un cube cible a été créé
-            this._cubeCounter.increment(targetCube.getType());
-
-            // Lance un projectile depuis le point d'impact vers ce TargetCube
-            this._projectileSystem.fire(impactSource, targetCube.getCube(), this._missileConfigs.default);
-        }
+        this._projectileSystem.fire(impactSource, targetCube.getCube(), this._missileConfigs.default);
     }
 }

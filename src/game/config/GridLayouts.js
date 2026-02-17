@@ -51,7 +51,7 @@ export const GRID_LAYOUT_FULL = {
         color: COLORS.obstacle,
         column: Math.floor(GRID_CONFIG.columns / 2),
         row: Math.floor(GRID_CONFIG.rows / 2),
-        sizeScale: 2,
+        sizeScale: 1,
         interactive: true,
         description: 'Obstacle central (feu d\'artifice)',
     },
