@@ -20,8 +20,9 @@ import { TargetCubeStats } from './TargetCubeStats.js';
 import { GridStateManager } from './GridStateManager.js';
 import { GameTurnManager } from './GameTurnManager.js';
 import { GameTurnUI } from './GameTurnUI.js';
+import { GridCellManager } from './GridCellManager.js';
 import {
-    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS,
+    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, SIZE_FACTORS,
 } from './config/Constants.js';
 
 export class ShootGame {
@@ -112,6 +113,11 @@ export class ShootGame {
     _gridStateManager;
 
     /**
+     * @type {GridCellManager}
+     */
+    _cellManager;
+
+    /**
      * @type {GameTurnManager}
      */
     _turnManager;
@@ -168,6 +174,7 @@ export class ShootGame {
         this._groundY = GRID_CONFIG.groundY;
 
         this._gridStateManager = new GridStateManager();
+        this._cellManager = new GridCellManager(this._columns, this._rows);
         this._grid = new Grid(this._columns, this._rows, this._cellSize);
         this._scene.add(this._grid);
         this._disableGridPointerEvents();
@@ -330,13 +337,23 @@ export class ShootGame {
 
     /**
      * Lance un feu d'artifice: 10 projectiles vers des positions aléatoires.
-     * Chaque cube cible a un type aléatoire et est registré auprès du compteur.
+     * Chaque cube cible a un type aléatoire, est placé dans une cellule de la grille,
+     * et est enregistré dans le gestionnaire de cellules et le compteur.
      * @returns {void}
      */
     _fireFireworksBurst() {
         for (let i = 0; i < ANIMATION_CONFIG.fireworksCount; i++) {
-            const targetCube = new TargetCube(this._grid);
-            targetCube.positionRandomly();
+            const targetCube = new TargetCube();
+            const randomCol = Math.floor(Math.random() * this._columns);
+            const randomRow = Math.floor(Math.random() * this._rows);
+            
+            // Ajoute le cube à la cellule de la grille
+            const stackIndex = this._cellManager.addCubeToCell(randomCol, randomRow, targetCube.getCube(), targetCube.getType());
+            targetCube.placeInCell(randomCol, randomRow, stackIndex);
+            
+            // Mémorise la position 3D
+            this._updateCubePosition3D(targetCube);
+            
             this._scene.add(targetCube.getCube());
             
             // Notifie le compteur qu'un cube cible a été créé
@@ -344,6 +361,26 @@ export class ShootGame {
             
             this._projectileSystem.fire(this._obstacle, targetCube.getCube(), this._missileConfigs.default);
         }
+    }
+
+    /**
+     * Met à jour la position 3D d'un cube cible basée sur sa cellule et son indice dans la pile.
+     * @param {TargetCube} targetCube - Le cube cible à positionner
+     * @returns {void}
+     * @private
+     */
+    _updateCubePosition3D(targetCube) {
+        const col = targetCube.getGridColumn();
+        const row = targetCube.getGridRow();
+        const stackIndex = targetCube.getStackIndex();
+        
+        const worldPos = this._grid.cellToWorld(col, row);
+        
+        // Calcule la hauteur Y en fonction de l'indice dans la pile
+        const cubeSize = this._cellSize * SIZE_FACTORS.targetCube;
+        const stackHeight = stackIndex * cubeSize;
+        
+        targetCube.getCube().setPosition(worldPos.x, stackHeight, worldPos.z);
     }
 
     /**
@@ -368,6 +405,9 @@ export class ShootGame {
             this._scene.remove(cube);
         }
         this._cubes.clear();
+
+        // Réinitialise le gestionnaire de cellules
+        this._cellManager.reset();
 
         // Réinitialise les références
         this._leftCube = null;

@@ -1,7 +1,7 @@
 /**
- * TargetCube.js — Cube cible invisible utilisé pour diriger les projectiles.
- * Devient visible après impact pour montrer les trajectoires du feu d'artifice.
- * Peut avoir un type spécifique qui détermine son style visuel.
+ * TargetCube.js — Cube cible qui représente un élément de grille.
+ * Chaque cube cible appartient à une cellule (col, row) et a un type spécifique.
+ * Le positionnement physique en 3D est géré par le système de rendu, pas par cette classe.
  */
 
 import { Cube } from '../shapes/Cube.js';
@@ -14,23 +14,34 @@ export class TargetCube {
     _cube;
 
     /**
-     * @type {import('../engine/Grid.js').Grid}
-     */
-    _grid;
-
-    /**
      * @type {string}
      */
     _type;
 
     /**
-     * Crée un cube cible invisible avec un type optionnel.
-     * @param {import('../engine/Grid.js').Grid} grid - Grille pour convertir grid → world coords
+     * @type {number}
+     */
+    _gridColumn;
+
+    /**
+     * @type {number}
+     */
+    _gridRow;
+
+    /**
+     * @type {number}
+     */
+    _stackIndex;
+
+    /**
+     * Crée un cube cible avec un type spécifique.
      * @param {string|null} type - Type de cible (ex: 'type-0'), aléatoire si null
      */
-    constructor(grid, type = null) {
-        this._grid = grid;
+    constructor(type = null) {
         this._type = type || this._selectRandomType();
+        this._gridColumn = null;
+        this._gridRow = null;
+        this._stackIndex = 0;
         
         const size = GRID_CONFIG.cellSize * SIZE_FACTORS.targetCube;
         this._cube = new Cube(size);
@@ -44,6 +55,7 @@ export class TargetCube {
     /**
      * Sélectionne un type aléatoire parmi les types disponibles.
      * @returns {string}
+     * @private
      */
     _selectRandomType() {
         const types = Object.keys(TARGET_CUBE_TYPES);
@@ -51,16 +63,56 @@ export class TargetCube {
     }
 
     /**
-     * Positionne le cube cible à une cellule aléatoire de la grille.
-     * Utilise la position world pour être indépendant du viewport.
+     * Associe ce cube à une cellule de la grille.
+     * @param {number} col - Colonne de la cellule
+     * @param {number} row - Ligne de la cellule
+     * @param {number} stackIndex - Indice dans la pile (0 = bottom)
      * @returns {void}
      */
-    positionRandomly() {
-        const randomCol = Math.floor(Math.random() * GRID_CONFIG.columns);
-        const randomRow = Math.floor(Math.random() * GRID_CONFIG.rows);
-        const worldPos = this._grid.cellToWorld(randomCol, randomRow);
+    placeInCell(col, row, stackIndex = 0) {
+        this._gridColumn = col;
+        this._gridRow = row;
+        this._stackIndex = stackIndex;
+    }
 
-        this._cube.setPosition(worldPos.x, worldPos.y, worldPos.z);
+    /**
+     * Récupère la colonne de la cellule contenant ce cube.
+     * @returns {number|null}
+     */
+    getGridColumn() {
+        return this._gridColumn;
+    }
+
+    /**
+     * Récupère la ligne de la cellule contenant ce cube.
+     * @returns {number|null}
+     */
+    getGridRow() {
+        return this._gridRow;
+    }
+
+    /**
+     * Récupère l'indice dans la pile (0 = au sol).
+     * @returns {number}
+     */
+    getStackIndex() {
+        return this._stackIndex;
+    }
+
+    /**
+     * Récupère le type de ce cube cible.
+     * @returns {string}
+     */
+    getType() {
+        return this._type;
+    }
+
+    /**
+     * Récupère le cube 3D pour le rendu.
+     * @returns {Cube}
+     */
+    getCube() {
+        return this._cube;
     }
 
     /**
@@ -69,21 +121,5 @@ export class TargetCube {
      */
     revealOnImpact() {
         this._cube.el.style.opacity = '1';
-    }
-
-    /**
-     * Retourne le type de ce cube cible.
-     * @returns {string}
-     */
-    getType() {
-        return this._type;
-    }
-
-    /**
-     * Retourne le cube interne pour intégration avec le moteur.
-     * @returns {Cube}
-     */
-    getCube() {
-        return this._cube;
     }
 }
