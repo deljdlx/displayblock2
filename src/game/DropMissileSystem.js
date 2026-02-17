@@ -131,11 +131,16 @@ export class DropMissileSystem {
             if (missile.y >= 0) {
                 toRemove.push(i);
 
-                // Déclenche l'explosion
+                // Déclenche l'explosion visuelle
                 this._explosionSystem.spawnExplosion(
                     { x: missile.x, y: 0, z: missile.z },
                     { color: '#ffd34d', particleCount: 14 },
                 );
+
+                // Lance le callback d'impact si défini
+                if (this._onMissileHit) {
+                    this._onMissileHit(missile.x, missile.z);
+                }
 
                 // Retire le missile de la scène
                 this._scene.remove(missile.cube);

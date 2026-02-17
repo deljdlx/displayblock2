@@ -22,6 +22,7 @@ import { GameTurnManager } from './GameTurnManager.js';
 import { GameTurnUI } from './GameTurnUI.js';
 import { GridCellManager } from './GridCellManager.js';
 import { DropMissileSystem } from './DropMissileSystem.js';
+import { SecondaryExplosion } from './SecondaryExplosion.js';
 import {
     GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, SIZE_FACTORS,
 } from './config/Constants.js';
@@ -211,6 +212,10 @@ export class ShootGame {
             this._cellSize,
             this._groundY,
         );
+        this._dropMissileSystem.setOnMissileHit((impactX, impactZ) => {
+            this._createSecondaryExplosion(impactX, impactZ);
+        });
+
         this._targetingSystem = new TargetingSystem(this._enemies);
         this._controls = new OrbitControls(this._viewport);
 
@@ -492,5 +497,63 @@ export class ShootGame {
         }
 
         console.warn('Grille reconstruite');
+    }
+
+    /**
+     * Crée une explosion en cascade suite à l'impact d'un missile du joueur.
+     * Crée 10 TargetCube aléatoires dans un rayon de 3 cellules et tire des projectiles depuis le point d'impact.
+     *
+     * @param {number} impactX - Position X de l'impact en world coordinates
+     * @param {number} impactZ - Position Z de l'impact en world coordinates
+     * @returns {void}
+     * @private
+     */
+    _createSecondaryExplosion(impactX, impactZ) {
+        // Génère 10 positions aléatoires dans un rayon de 3 cellules
+        const positions = SecondaryExplosion.generateRandomPositions(
+            Math.round((impactX + this._columns * this._cellSize / 2) / this._cellSize - 0.5),
+            Math.round((impactZ + this._rows * this._cellSize / 2) / this._cellSize - 0.5),
+            3,
+            this._columns,
+            this._rows,
+        );
+
+        // Crée un objet "source" temporaire au point d'impact pour les tirs de projectiles
+        const impactSource = {
+            position: {
+                x: impactX,
+                y: 0,
+                z: impactZ,
+            },
+            animateSize: () => {},
+            onTransitionEnd: () => {},
+            clearFaceTransition: () => {},
+        };
+
+        // Crée 10 TargetCube et tire vers eux
+        for (let i = 0; i < positions.length; i += 1) {
+            const pos = positions[i];
+            const targetCube = new TargetCube();
+
+            // Ajoute le cube à la cellule de la grille
+            const stackIndex = this._cellManager.addCubeToCell(
+                pos.col,
+                pos.row,
+                targetCube.getCube(),
+                targetCube.getType(),
+            );
+            targetCube.placeInCell(pos.col, pos.row, stackIndex);
+
+            // Mémorise la position 3D
+            this._updateCubePosition3D(targetCube);
+
+            this._scene.add(targetCube.getCube());
+
+            // Notifie le compteur qu'un cube cible a été créé
+            this._cubeCounter.increment(targetCube.getType());
+
+            // Lance un projectile depuis le point d'impact vers ce TargetCube
+            this._projectileSystem.fire(impactSource, targetCube.getCube(), this._missileConfigs.default);
+        }
     }
 }
