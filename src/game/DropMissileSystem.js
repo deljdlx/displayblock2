@@ -4,7 +4,7 @@
  */
 
 import { Cube } from '../shapes/Cube.js';
-import { SIZE_FACTORS } from './config/Constants.js';
+import { SIZE_FACTORS, MISSILE_CONFIGS, DROP_MISSILE_CONFIG } from './config/Constants.js';
 
 export class DropMissileSystem {
     /**
@@ -89,12 +89,12 @@ export class DropMissileSystem {
      * @returns {void}
      */
     dropMissile(worldX, worldZ) {
-        const missileSize = Math.max(14, Math.round(this._cellSize * SIZE_FACTORS.projectile));
+        const missileSize = Math.max(SIZE_FACTORS.projectileMinPx, Math.round(this._cellSize * SIZE_FACTORS.projectile));
         const missile = new Cube(missileSize);
-        missile.setColor('#ffd34d');
+        missile.setColor(MISSILE_CONFIGS.default.color);
 
         // Position initiale: très haut (Y très négatif)
-        const startY = -(this._cellSize * 15);
+        const startY = -(this._cellSize * DROP_MISSILE_CONFIG.startHeightMultiplier);
         missile.setPosition(worldX, startY, worldZ);
         this._scene.add(missile);
 
@@ -104,7 +104,7 @@ export class DropMissileSystem {
             z: worldZ,
             y: startY,
             velocity: 0,
-            gravity: 1200, // Force de gravité (pixels/sec²)
+            gravity: DROP_MISSILE_CONFIG.gravity,
         });
     }
 
@@ -119,7 +119,7 @@ export class DropMissileSystem {
 
         for (let i = 0; i < this._activeMissiles.length; i += 1) {
             const missile = this._activeMissiles[i];
-            const deltaTime = 0.016; // ~60 FPS
+            const deltaTime = DROP_MISSILE_CONFIG.fixedDeltaTime;
 
             // Applique la gravité (positive pour descendre vers Y+ = bas)
             missile.velocity += missile.gravity * deltaTime;
@@ -134,7 +134,7 @@ export class DropMissileSystem {
                 // Déclenche l'explosion visuelle
                 this._explosionSystem.spawnExplosion(
                     { x: missile.x, y: 0, z: missile.z },
-                    { color: '#ffd34d', particleCount: 14 },
+                    { particleCount: MISSILE_CONFIGS.default.particleCount, particleColors: MISSILE_CONFIGS.default.particleColors },
                 );
 
                 // Lance le callback d'impact si défini

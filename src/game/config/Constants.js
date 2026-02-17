@@ -32,6 +32,7 @@ export const CUBE_POSITIONS = {
  */
 export const SIZE_FACTORS = {
     projectile: 0.35,      // Projectile = 35% cellSize
+    projectileMinPx: 14,   // Plancher en pixels pour la taille d'un projectile
     targetCube: 0.3,       // Cube cible = 30% cellSize
     obstacleScale: 2,      // Obstacle = 2x cellSize
 };
@@ -84,6 +85,62 @@ export const COLORS = {
     enemy: '#2f6cff',         // Bleu foncé
     obstacle: '#ff4444',      // Rouge
 };
+
+/**
+ * Paramètres de l'explosion de particules (ExplosionSystem)
+ */
+export const EXPLOSION_CONFIG = {
+    particleMinSizeFactor: 0.12,
+    particleMinSizeFloor: 6,
+    particleMaxSizeFactor: 0.28,
+    particleMaxSizeFloor: 12,
+    speedMin: 260,
+    speedRange: 340,
+    initialUpwardVelocity: 650,
+    lifetimeMin: 600,
+    lifetimeRange: 300,
+    shockwave: {
+        sizeFactor: 1.2,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 210, 140, 0.8)',
+        shadowBlur: 12,
+        shadowColor: 'rgba(255, 180, 80, 0.6)',
+        initialScale: 0.2,
+        finalScale: 2.6,
+        durationSeconds: 0.45,
+    },
+};
+
+/**
+ * Paramètres de la vibration d'impact (ImpactShakeSystem)
+ */
+export const SHAKE_CONFIG = {
+    durationMs: 220,
+    amplitudeFactor: 0.06,
+    rotationAmplitude: 6,
+    verticalReduction: 0.5,
+};
+
+/**
+ * Paramètres du missile vertical (DropMissileSystem)
+ */
+export const DROP_MISSILE_CONFIG = {
+    gravity: 1200,
+    startHeightMultiplier: 15,
+    fixedDeltaTime: 0.016,
+};
+
+/**
+ * Paramètres de placement des sous-cubes dans une cellule
+ */
+export const SUB_CUBE_CONFIG = {
+    margin: 2,
+};
+
+/**
+ * Nombre de positions par étage dans la grille 2x2
+ */
+export const POSITIONS_PER_LEVEL = 4;
 
 /**
  * Types de cubes cibles avec leurs styles visuels.

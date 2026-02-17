@@ -5,7 +5,7 @@
 
 import { Node } from '../engine/Node.js';
 import { Cube } from '../shapes/Cube.js';
-import { PARTICLE_PHYSICS } from './config/Constants.js';
+import { PARTICLE_PHYSICS, MISSILE_CONFIGS, EXPLOSION_CONFIG } from './config/Constants.js';
 
 /**
  * @typedef {Object} ParticleMotion
@@ -74,11 +74,11 @@ export class ExplosionSystem {
      * @returns {void}
      */
     spawnExplosion(impact, config = {}) {
-        const particleCount = config.particleCount ?? 14;
-        const particleColors = config.particleColors ?? ['#ffcc66', '#ffd34d', '#ff9966', '#ff6b6b', '#ffe3a3'];
-        const gravity = config.gravity ?? 2200;
-        const minSize = Math.max(6, Math.round(this._cellSize * 0.12));
-        const maxSize = Math.max(12, Math.round(this._cellSize * 0.28));
+        const particleCount = config.particleCount ?? MISSILE_CONFIGS.default.particleCount;
+        const particleColors = config.particleColors ?? MISSILE_CONFIGS.default.particleColors;
+        const gravity = config.gravity ?? PARTICLE_PHYSICS.gravityBase;
+        const minSize = Math.max(EXPLOSION_CONFIG.particleMinSizeFloor, Math.round(this._cellSize * EXPLOSION_CONFIG.particleMinSizeFactor));
+        const maxSize = Math.max(EXPLOSION_CONFIG.particleMaxSizeFloor, Math.round(this._cellSize * EXPLOSION_CONFIG.particleMaxSizeFactor));
 
         this._spawnShockwave(impact);
 
@@ -90,7 +90,7 @@ export class ExplosionSystem {
             this._scene.add(particle);
 
             const direction = this._randomUnitVector();
-            const speed = 260 + Math.random() * 340;
+            const speed = EXPLOSION_CONFIG.speedMin + Math.random() * EXPLOSION_CONFIG.speedRange;
 
             const now = window.performance.now();
             const motion = {
@@ -98,7 +98,7 @@ export class ExplosionSystem {
                 position: { ...impact },
                 velocity: {
                     x: direction.x * speed,
-                    y: direction.y * speed - 650,
+                    y: direction.y * speed - EXPLOSION_CONFIG.initialUpwardVelocity,
                     z: direction.z * speed,
                 },
                 rotation: {
@@ -114,7 +114,7 @@ export class ExplosionSystem {
                 gravity,
                 startTime: now,
                 lastTime: now,
-                lifeMs: 600 + Math.random() * 300,
+                lifeMs: EXPLOSION_CONFIG.lifetimeMin + Math.random() * EXPLOSION_CONFIG.lifetimeRange,
             };
 
             this._activeParticles.add(motion);
@@ -182,14 +182,15 @@ export class ExplosionSystem {
      * @returns {void}
      */
     _spawnShockwave(impact) {
+        const sw = EXPLOSION_CONFIG.shockwave;
         const shockwave = new Node();
-        const size = Math.round(this._cellSize * 1.2);
+        const size = Math.round(this._cellSize * sw.sizeFactor);
 
         shockwave.el.style.width = `${size}px`;
         shockwave.el.style.height = `${size}px`;
         shockwave.el.style.borderRadius = '50%';
-        shockwave.el.style.border = '2px solid rgba(255, 210, 140, 0.8)';
-        shockwave.el.style.boxShadow = '0 0 12px rgba(255, 180, 80, 0.6)';
+        shockwave.el.style.border = `${sw.borderWidth}px solid ${sw.borderColor}`;
+        shockwave.el.style.boxShadow = `0 0 ${sw.shadowBlur}px ${sw.shadowColor}`;
         shockwave.el.style.pointerEvents = 'none';
         shockwave.el.style.opacity = '1';
         shockwave.el.style.transformOrigin = '50% 50%';
@@ -199,12 +200,12 @@ export class ExplosionSystem {
         this._scene.add(shockwave);
 
         const baseTransform = shockwave.el.style.transform;
-        shockwave.el.style.transform = `${baseTransform} scale3d(0.2, 0.2, 0.2)`;
+        shockwave.el.style.transform = `${baseTransform} scale3d(${sw.initialScale}, ${sw.initialScale}, ${sw.initialScale})`;
 
         window.requestAnimationFrame(() => {
-            shockwave.el.style.transition = 'transform 0.45s ease-out, opacity 0.45s ease-out';
+            shockwave.el.style.transition = `transform ${sw.durationSeconds}s ease-out, opacity ${sw.durationSeconds}s ease-out`;
             shockwave.el.style.opacity = '0';
-            shockwave.el.style.transform = `${baseTransform} scale3d(2.6, 2.6, 2.6)`;
+            shockwave.el.style.transform = `${baseTransform} scale3d(${sw.finalScale}, ${sw.finalScale}, ${sw.finalScale})`;
         });
 
         shockwave.onTransitionEnd(() => {

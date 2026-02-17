@@ -3,8 +3,7 @@
  * Les 10 cubes se placent dans une grille 2x2 avec modulo 4 pour les positions.
  */
 
-// Nombre de positions par étage dans la grille (configurable)
-export const POSITIONS_PER_LEVEL = 4;
+import { POSITIONS_PER_LEVEL } from './config/Constants.js';
 
 export class SecondaryExplosion {
     /**

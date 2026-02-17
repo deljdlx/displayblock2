@@ -25,6 +25,7 @@ import { DropMissileSystem } from './DropMissileSystem.js';
 import { SecondaryExplosion } from './SecondaryExplosion.js';
 import {
     GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS,
+    SUB_CUBE_CONFIG, POSITIONS_PER_LEVEL,
 } from './config/Constants.js';
 
 export class ShootGame {
@@ -396,14 +397,14 @@ export class ShootGame {
     _createAndPlaceTargetCube(col, row) {
         const targetCube = new TargetCube();
 
-        const newCubeSize = (this._cellSize / 2) - 2;
+        const newCubeSize = (this._cellSize / 2) - SUB_CUBE_CONFIG.margin;
         targetCube.getCube().setSize(newCubeSize, newCubeSize, newCubeSize);
 
         const stackIndex = this._cellManager.addCubeToCell(col, row, targetCube.getCube(), targetCube.getType());
         targetCube.placeInCell(col, row, stackIndex);
 
         const subPos = SecondaryExplosion.getSubPosition(stackIndex);
-        const level = Math.floor(stackIndex / 4);
+        const level = Math.floor(stackIndex / POSITIONS_PER_LEVEL);
 
         this._updateCubePosition3DWithSubPosition(
             targetCube,
@@ -437,7 +438,7 @@ export class ShootGame {
 
         // Tailles
         const cubeSize = targetCube.getCube().width; // 18px
-        const margin = 2; // 2px de marge
+        const margin = SUB_CUBE_CONFIG.margin;
         
         // Distance entre les centres des cubes adjacents = taille + marge
         const spacing = cubeSize + margin; // 18 + 2 = 20

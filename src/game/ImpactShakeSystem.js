@@ -2,6 +2,8 @@
  * ImpactShakeSystem.js — applique une vibration visuelle aux cubes touches.
  */
 
+import { SHAKE_CONFIG } from './config/Constants.js';
+
 export class ImpactShakeSystem {
     /**
      * @type {number}
@@ -36,9 +38,9 @@ export class ImpactShakeSystem {
         }
 
         const startTime = window.performance.now();
-        const durationMs = 220;
-        const amplitude = this._cellSize * 0.06;
-        const rotationAmplitude = 6;
+        const durationMs = SHAKE_CONFIG.durationMs;
+        const amplitude = this._cellSize * SHAKE_CONFIG.amplitudeFactor;
+        const rotationAmplitude = SHAKE_CONFIG.rotationAmplitude;
         const basePosition = { x: target.position.x, y: target.position.y, z: target.position.z };
         const baseRotation = { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z };
 
@@ -47,7 +49,7 @@ export class ImpactShakeSystem {
             const damping = 1 - progress;
 
             const offsetX = (Math.random() * 2 - 1) * amplitude * damping;
-            const offsetY = (Math.random() * 2 - 1) * amplitude * 0.5 * damping;
+            const offsetY = (Math.random() * 2 - 1) * amplitude * SHAKE_CONFIG.verticalReduction * damping;
             const offsetZ = (Math.random() * 2 - 1) * amplitude * damping;
 
             const rotX = (Math.random() * 2 - 1) * rotationAmplitude * damping;

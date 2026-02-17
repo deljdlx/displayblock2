@@ -101,7 +101,7 @@ export class ProjectileSystem {
 
         const missileConfig = this._resolveMissileConfig(config);
 
-        const projectileSize = Math.max(14, Math.round(this._cellSize * SIZE_FACTORS.projectile));
+        const projectileSize = Math.max(SIZE_FACTORS.projectileMinPx, Math.round(this._cellSize * SIZE_FACTORS.projectile));
         const projectile = new Cube(projectileSize);
         projectile.setColor(missileConfig.color);
 
