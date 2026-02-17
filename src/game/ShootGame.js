@@ -18,6 +18,8 @@ import { TargetCube } from './TargetCube.js';
 import { TargetCubeCounter } from './TargetCubeCounter.js';
 import { TargetCubeStats } from './TargetCubeStats.js';
 import { GridStateManager } from './GridStateManager.js';
+import { GameTurnManager } from './GameTurnManager.js';
+import { GameTurnUI } from './GameTurnUI.js';
 import {
     GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS,
 } from './config/Constants.js';
@@ -110,6 +112,16 @@ export class ShootGame {
     _gridStateManager;
 
     /**
+     * @type {GameTurnManager}
+     */
+    _turnManager;
+
+    /**
+     * @type {GameTurnUI}
+     */
+    _turnUI;
+
+    /**
      * @type {{default: import('./ProjectileSystem.js').MissileConfig}}
      */
     _missileConfigs;
@@ -186,6 +198,17 @@ export class ShootGame {
         // Initialise le système de comptage des cubes cibles
         this._cubeCounter = new TargetCubeCounter();
         this._stats = new TargetCubeStats(this._cubeCounter, document.body);
+
+        // Initialise le système de gestion des tours
+        this._turnManager = new GameTurnManager();
+        this._turnUI = new GameTurnUI(() => {
+            this._turnManager.nextTurn();
+        });
+
+        // S'abonne aux événements de début de tour pour déclencher les feux d'artifice
+        this._turnManager.subscribeTurnStarted(() => {
+            this._fireFireworksBurst();
+        });
     }
 
     /**
