@@ -21,6 +21,7 @@ import { GridStateManager } from './GridStateManager.js';
 import { GameTurnManager } from './GameTurnManager.js';
 import { GameTurnUI } from './GameTurnUI.js';
 import { GridCellManager } from './GridCellManager.js';
+import { DropMissileSystem } from './DropMissileSystem.js';
 import {
     GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, SIZE_FACTORS,
 } from './config/Constants.js';
@@ -128,6 +129,11 @@ export class ShootGame {
     _turnUI;
 
     /**
+     * @type {DropMissileSystem}
+     */
+    _dropMissileSystem;
+
+    /**
      * @type {{default: import('./ProjectileSystem.js').MissileConfig}}
      */
     _missileConfigs;
@@ -199,6 +205,14 @@ export class ShootGame {
                 defaultMissile: this._missileConfigs.default,
             },
         );
+        this._dropMissileSystem = new DropMissileSystem(
+            this._scene,
+            this._clock,
+            this._explosionSystem,
+            this._impactSystem,
+            this._cellSize,
+            this._groundY,
+        );
         this._targetingSystem = new TargetingSystem(this._enemies);
         this._controls = new OrbitControls(this._viewport);
 
@@ -216,6 +230,11 @@ export class ShootGame {
         this._turnManager.subscribeTurnStarted(() => {
             this._fireFireworksBurst();
         });
+
+        // Ajoute l'écouteur de clic sur la grille pour les missiles qui tombent
+        this._grid.el.addEventListener('pointerdown', (event) => {
+            this._handleGridClick(event);
+        });
     }
 
     /**
@@ -223,6 +242,13 @@ export class ShootGame {
      */
     init() {
         this._positionCubes();
+        
+        // Réactive les événements pointeur sur la grille et les cellules pour détecter les clics
+        this._grid.el.style.pointerEvents = 'auto';
+        const gridCells = this._grid.el.querySelectorAll('.db-grid-cell');
+        for (const cell of gridCells) {
+            cell.style.pointerEvents = 'auto';
+        }
         
         // Active les interactions seulement pour les cubes qui existent dans le layout
         if (this._leftCube) {
@@ -381,6 +407,32 @@ export class ShootGame {
         const stackHeight = stackIndex * cubeSize;
         
         targetCube.getCube().setPosition(worldPos.x, stackHeight, worldPos.z);
+    }
+
+    /**
+     * Gère le clic sur la grille: lance un missile qui tombe verticalement.
+     * @param {PointerEvent} event - L'événement de clic
+     * @returns {void}
+     * @private
+     */
+    _handleGridClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Trouve la cellule cliquée en remontant l'arbre DOM
+        const clickedCell = event.target.closest('.db-grid-cell');
+        if (!clickedCell) {
+            return;
+        }
+
+        const col = Number(clickedCell.dataset.col);
+        const row = Number(clickedCell.dataset.row);
+
+        // Convertit la coordonnée grille en position world
+        const worldPos = this._grid.cellToWorld(col, row);
+
+        // Lance le missile
+        this._dropMissileSystem.dropMissile(worldPos.x, worldPos.z);
     }
 
     /**
