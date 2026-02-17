@@ -37,10 +37,9 @@ export class ImpactShakeSystem {
             window.cancelAnimationFrame(previousId);
         }
 
+        const { durationMs, amplitudeFactor, rotationAmplitude } = SHAKE_CONFIG;
         const startTime = window.performance.now();
-        const durationMs = SHAKE_CONFIG.durationMs;
-        const amplitude = this._cellSize * SHAKE_CONFIG.amplitudeFactor;
-        const rotationAmplitude = SHAKE_CONFIG.rotationAmplitude;
+        const amplitude = this._cellSize * amplitudeFactor;
         const basePosition = { x: target.position.x, y: target.position.y, z: target.position.z };
         const baseRotation = { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z };
 

@@ -89,9 +89,10 @@ export class DropMissileSystem {
      * @returns {void}
      */
     dropMissile(worldX, worldZ) {
+        const defaults = MISSILE_CONFIGS.default;
         const missileSize = Math.max(SIZE_FACTORS.projectileMinPx, Math.round(this._cellSize * SIZE_FACTORS.projectile));
         const missile = new Cube(missileSize);
-        missile.setColor(MISSILE_CONFIGS.default.color);
+        missile.setColor(defaults.color);
 
         // Position initiale: très haut (Y très négatif)
         const startY = -(this._cellSize * DROP_MISSILE_CONFIG.startHeightMultiplier);
@@ -132,9 +133,13 @@ export class DropMissileSystem {
                 toRemove.push(i);
 
                 // Déclenche l'explosion visuelle
+                const defaults = MISSILE_CONFIGS.default;
                 this._explosionSystem.spawnExplosion(
                     { x: missile.x, y: 0, z: missile.z },
-                    { particleCount: MISSILE_CONFIGS.default.particleCount, particleColors: MISSILE_CONFIGS.default.particleColors },
+                    {
+                        particleCount: defaults.particleCount,
+                        particleColors: defaults.particleColors,
+                    },
                 );
 
                 // Lance le callback d'impact si défini

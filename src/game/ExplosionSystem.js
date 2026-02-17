@@ -74,11 +74,14 @@ export class ExplosionSystem {
      * @returns {void}
      */
     spawnExplosion(impact, config = {}) {
-        const particleCount = config.particleCount ?? MISSILE_CONFIGS.default.particleCount;
-        const particleColors = config.particleColors ?? MISSILE_CONFIGS.default.particleColors;
+        const defaults = MISSILE_CONFIGS.default;
+        const ex = EXPLOSION_CONFIG;
+
+        const particleCount = config.particleCount ?? defaults.particleCount;
+        const particleColors = config.particleColors ?? defaults.particleColors;
         const gravity = config.gravity ?? PARTICLE_PHYSICS.gravityBase;
-        const minSize = Math.max(EXPLOSION_CONFIG.particleMinSizeFloor, Math.round(this._cellSize * EXPLOSION_CONFIG.particleMinSizeFactor));
-        const maxSize = Math.max(EXPLOSION_CONFIG.particleMaxSizeFloor, Math.round(this._cellSize * EXPLOSION_CONFIG.particleMaxSizeFactor));
+        const minSize = Math.max(ex.particleMinSizeFloor, Math.round(this._cellSize * ex.particleMinSizeFactor));
+        const maxSize = Math.max(ex.particleMaxSizeFloor, Math.round(this._cellSize * ex.particleMaxSizeFactor));
 
         this._spawnShockwave(impact);
 
@@ -90,7 +93,7 @@ export class ExplosionSystem {
             this._scene.add(particle);
 
             const direction = this._randomUnitVector();
-            const speed = EXPLOSION_CONFIG.speedMin + Math.random() * EXPLOSION_CONFIG.speedRange;
+            const speed = ex.speedMin + Math.random() * ex.speedRange;
 
             const now = window.performance.now();
             const motion = {
@@ -98,7 +101,7 @@ export class ExplosionSystem {
                 position: { ...impact },
                 velocity: {
                     x: direction.x * speed,
-                    y: direction.y * speed - EXPLOSION_CONFIG.initialUpwardVelocity,
+                    y: direction.y * speed - ex.initialUpwardVelocity,
                     z: direction.z * speed,
                 },
                 rotation: {
@@ -114,7 +117,7 @@ export class ExplosionSystem {
                 gravity,
                 startTime: now,
                 lastTime: now,
-                lifeMs: EXPLOSION_CONFIG.lifetimeMin + Math.random() * EXPLOSION_CONFIG.lifetimeRange,
+                lifeMs: ex.lifetimeMin + Math.random() * ex.lifetimeRange,
             };
 
             this._activeParticles.add(motion);

@@ -436,12 +436,9 @@ export class ShootGame {
 
         const worldPos = this._grid.cellToWorld(col, row);
 
-        // Tailles
-        const cubeSize = targetCube.getCube().width; // 18px
+        const cubeSize = targetCube.getCube().width;
         const margin = SUB_CUBE_CONFIG.margin;
-        
-        // Distance entre les centres des cubes adjacents = taille + marge
-        const spacing = cubeSize + margin; // 18 + 2 = 20
+        const spacing = cubeSize + margin;
 
         // Positions des 4 cubes en grille 2x2
         const offsetX = (subCol - 0.5) * spacing;
