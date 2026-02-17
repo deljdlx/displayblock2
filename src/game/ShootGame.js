@@ -216,13 +216,20 @@ export class ShootGame {
      */
     init() {
         this._positionCubes();
-        this._enableCubeInteraction(this._leftCube);
-        this._enableCubeInteraction(this._rightCube);
-        this._enableCubeInteraction(this._obstacle);
-
-        this._registerCubeClicks(this._leftCube, () => this._rightCube);
-        this._registerCubeClicks(this._rightCube, () => this._targetingSystem.pickRandomEnemy());
-        this._registerCubeClicks(this._obstacle, () => this._fireFireworksBurst());
+        
+        // Active les interactions seulement pour les cubes qui existent dans le layout
+        if (this._leftCube) {
+            this._enableCubeInteraction(this._leftCube);
+            this._registerCubeClicks(this._leftCube, () => this._rightCube);
+        }
+        if (this._rightCube) {
+            this._enableCubeInteraction(this._rightCube);
+            this._registerCubeClicks(this._rightCube, () => this._targetingSystem.pickRandomEnemy());
+        }
+        if (this._obstacle) {
+            this._enableCubeInteraction(this._obstacle);
+            this._registerCubeClicks(this._obstacle, () => this._fireFireworksBurst());
+        }
     }
 
     /**
