@@ -3,6 +3,8 @@
  * Évite les magic numbers et rend la configuration maintenable.
  */
 
+import { TARGET_CUBE_TYPES as IMPORTED_TARGET_CUBE_TYPES } from './TargetCubeColors.js';
+
 /**
  * Dimensions de la grille de jeu
  */
@@ -82,6 +84,13 @@ export const COLORS = {
     enemy: '#2f6cff',         // Bleu foncé
     obstacle: '#ff4444',      // Rouge
 };
+
+/**
+ * Types de cubes cibles avec leurs styles visuels.
+ * Importés depuis TargetCubeColors.js pour configuration centralisée.
+ * Chaque type est un objet avec propriétés extensibles (couleur et plus).
+ */
+export const TARGET_CUBE_TYPES = IMPORTED_TARGET_CUBE_TYPES;
 
 /**
  * Descripteur de grille: définit le placement et configuration de tous les cubes.

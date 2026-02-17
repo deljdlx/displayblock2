@@ -15,6 +15,8 @@ import { ImpactShakeSystem } from './ImpactShakeSystem.js';
 import { ProjectileSystem } from './ProjectileSystem.js';
 import { TargetingSystem } from './TargetingSystem.js';
 import { TargetCube } from './TargetCube.js';
+import { TargetCubeCounter } from './TargetCubeCounter.js';
+import { TargetCubeStats } from './TargetCubeStats.js';
 import {
     GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, GRID_LAYOUT,
 } from './config/Constants.js';
@@ -92,6 +94,16 @@ export class ShootGame {
     _targetingSystem;
 
     /**
+     * @type {TargetCubeCounter}
+     */
+    _cubeCounter;
+
+    /**
+     * @type {TargetCubeStats}
+     */
+    _stats;
+
+    /**
      * @type {{default: import('./ProjectileSystem.js').MissileConfig}}
      */
     _missileConfigs;
@@ -163,6 +175,10 @@ export class ShootGame {
         );
         this._targetingSystem = new TargetingSystem(this._enemies);
         this._controls = new OrbitControls(this._viewport);
+
+        // Initialise le système de comptage des cubes cibles
+        this._cubeCounter = new TargetCubeCounter();
+        this._stats = new TargetCubeStats(this._cubeCounter, document.body);
     }
 
     /**
@@ -275,7 +291,7 @@ export class ShootGame {
 
     /**
      * Lance un feu d'artifice: 10 projectiles vers des positions aléatoires.
-     * Utilisé pour l'interaction du cube obstacle.
+     * Chaque cube cible a un type aléatoire et est registré auprès du compteur.
      * @returns {void}
      */
     _fireFireworksBurst() {
@@ -283,6 +299,10 @@ export class ShootGame {
             const targetCube = new TargetCube(this._grid);
             targetCube.positionRandomly();
             this._scene.add(targetCube.getCube());
+            
+            // Notifie le compteur qu'un cube cible a été créé
+            this._cubeCounter.increment(targetCube.getType());
+            
             this._projectileSystem.fire(this._obstacle, targetCube.getCube(), this._missileConfigs.default);
         }
     }
