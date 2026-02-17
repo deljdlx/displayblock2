@@ -1,5 +1,8 @@
 /**
  * AnimationClock.js — boucle requestAnimationFrame partagee pour synchroniser les animations.
+ * Centralise la gestion du RAF (requestAnimationFrame) pour éviter les fuites mémoire
+ * et assurer que tous les systèmes d'animation utilisent le même horloge (60fps).
+ * Se démarre automatiquement à la première écoute et s'arrête quand il n'y a plus d'écouteurs.
  */
 
 export class AnimationClock {

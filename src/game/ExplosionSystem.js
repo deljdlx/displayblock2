@@ -1,9 +1,11 @@
 /**
  * ExplosionSystem.js — gere les particules et l'onde de choc lors d'un impact.
+ * Les particules simulent la gravité, rebonds et friction pour un effet réaliste.
  */
 
 import { Node } from '../engine/Node.js';
 import { Cube } from '../shapes/Cube.js';
+import { PARTICLE_PHYSICS } from './config/Constants.js';
 
 /**
  * @typedef {Object} ParticleMotion
@@ -12,9 +14,17 @@ import { Cube } from '../shapes/Cube.js';
  * @property {{x: number, y: number, z: number}} velocity
  * @property {{x: number, y: number, z: number}} rotation
  * @property {{x: number, y: number, z: number}} spin
+ * @property {number} gravity
  * @property {number} startTime
  * @property {number} lastTime
  * @property {number} lifeMs
+ */
+
+/**
+ * @typedef {Object} ExplosionConfig
+ * @property {number} particleCount
+ * @property {Array<string>} particleColors
+ * @property {number} gravity
  */
 
 export class ExplosionSystem {
@@ -60,13 +70,15 @@ export class ExplosionSystem {
 
     /**
      * @param {{x: number, y: number, z: number}} impact
+     * @param {Partial<ExplosionConfig>} config
      * @returns {void}
      */
-    spawnExplosion(impact) {
-        const particleCount = 14;
+    spawnExplosion(impact, config = {}) {
+        const particleCount = config.particleCount ?? 14;
+        const particleColors = config.particleColors ?? ['#ffcc66', '#ffd34d', '#ff9966', '#ff6b6b', '#ffe3a3'];
+        const gravity = config.gravity ?? 2200;
         const minSize = Math.max(6, Math.round(this._cellSize * 0.12));
         const maxSize = Math.max(12, Math.round(this._cellSize * 0.28));
-        const particleColors = ['#ffcc66', '#ffd34d', '#ff9966', '#ff6b6b', '#ffe3a3'];
 
         this._spawnShockwave(impact);
 
@@ -99,6 +111,7 @@ export class ExplosionSystem {
                     y: (Math.random() * 2 - 1) * 360,
                     z: (Math.random() * 2 - 1) * 360,
                 },
+                gravity,
                 startTime: now,
                 lastTime: now,
                 lifeMs: 600 + Math.random() * 300,
@@ -137,26 +150,22 @@ export class ExplosionSystem {
             return;
         }
 
-        const deltaSeconds = Math.min(0.05, (timeMs - motion.lastTime) / 1000);
+        const deltaSeconds = Math.min(PARTICLE_PHYSICS.maxDeltaSeconds, (timeMs - motion.lastTime) / 1000);
         if (deltaSeconds <= 0) {
             return;
         }
         motion.lastTime = timeMs;
 
-        const gravity = 2200;
-        const bounceDamping = 0.35;
-        const friction = 0.7;
-
-        motion.velocity.y += gravity * deltaSeconds;
+        motion.velocity.y += motion.gravity * deltaSeconds;
         motion.position.x += motion.velocity.x * deltaSeconds;
         motion.position.y += motion.velocity.y * deltaSeconds;
         motion.position.z += motion.velocity.z * deltaSeconds;
 
         if (motion.position.y > this._groundY) {
             motion.position.y = this._groundY;
-            motion.velocity.y *= -bounceDamping;
-            motion.velocity.x *= friction;
-            motion.velocity.z *= friction;
+            motion.velocity.y *= -PARTICLE_PHYSICS.bounceDamping;
+            motion.velocity.x *= PARTICLE_PHYSICS.friction;
+            motion.velocity.z *= PARTICLE_PHYSICS.friction;
         }
 
         motion.rotation.x += motion.spin.x * deltaSeconds;
