@@ -17,8 +17,9 @@ import { TargetingSystem } from './TargetingSystem.js';
 import { TargetCube } from './TargetCube.js';
 import { TargetCubeCounter } from './TargetCubeCounter.js';
 import { TargetCubeStats } from './TargetCubeStats.js';
+import { GridStateManager } from './GridStateManager.js';
 import {
-    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, GRID_LAYOUT,
+    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS,
 } from './config/Constants.js';
 
 export class ShootGame {
@@ -104,6 +105,11 @@ export class ShootGame {
     _stats;
 
     /**
+     * @type {GridStateManager}
+     */
+    _gridStateManager;
+
+    /**
      * @type {{default: import('./ProjectileSystem.js').MissileConfig}}
      */
     _missileConfigs;
@@ -149,6 +155,7 @@ export class ShootGame {
         this._cellSize = GRID_CONFIG.cellSize;
         this._groundY = GRID_CONFIG.groundY;
 
+        this._gridStateManager = new GridStateManager();
         this._grid = new Grid(this._columns, this._rows, this._cellSize);
         this._scene.add(this._grid);
         this._disableGridPointerEvents();
@@ -196,13 +203,14 @@ export class ShootGame {
     }
 
     /**
-     * Initialise tous les cubes depuis le descripteur de grille GRID_LAYOUT.
+     * Initialise tous les cubes depuis le layout actuel du GridStateManager.
      * Crée les cubes avec leur taille et couleur, les ajoute à la scène.
      * Stocke les références par clé pour accès facile.
      * @returns {void}
      */
     _initializeGridCubes() {
-        for (const [key, descriptor] of Object.entries(GRID_LAYOUT)) {
+        const currentLayout = this._gridStateManager.getCurrentLayout();
+        for (const [key, descriptor] of Object.entries(currentLayout)) {
             const cube = this._createCubeFromDescriptor(descriptor);
             this._cubes.set(key, cube);
         }
@@ -231,12 +239,13 @@ export class ShootGame {
     }
 
     /**
-     * Positionne tous les cubes selon le descripteur GRID_LAYOUT.
+     * Positionne tous les cubes selon le layout actuel.
      * Convertit les coordonnées grid (col, row) en world coordinates.
      * @returns {void}
      */
     _positionCubes() {
-        for (const [key, descriptor] of Object.entries(GRID_LAYOUT)) {
+        const currentLayout = this._gridStateManager.getCurrentLayout();
+        for (const [key, descriptor] of Object.entries(currentLayout)) {
             const cube = this._cubes.get(key);
             const worldPos = this._grid.cellToWorld(descriptor.column, descriptor.row);
             cube.setPosition(worldPos.x, worldPos.y, worldPos.z);
@@ -305,5 +314,58 @@ export class ShootGame {
             
             this._projectileSystem.fire(this._obstacle, targetCube.getCube(), this._missileConfigs.default);
         }
+    }
+
+    /**
+     * Charge un layout de grille spécifique par clé.
+     * Détruit tous les cubes actuels et en crée une nouvelle grille selon le layout.
+     * @param {string} layoutKey - Clé du layout ('full', 'minimal', etc)
+     * @returns {void}
+     */
+    loadLayout(layoutKey) {
+        console.warn(`Changement vers layout "${layoutKey}"...`);
+        this._gridStateManager.loadLayout(layoutKey);
+        this._rebuildGrid();
+    }
+
+    /**
+     * Reconstruit la grille: supprime tous les cubes et les recréé selon le layout actuel.
+     * @returns {void}
+     */
+    _rebuildGrid() {
+        // Supprime tous les cubes actuels
+        for (const cube of this._cubes.values()) {
+            this._scene.remove(cube);
+        }
+        this._cubes.clear();
+
+        // Réinitialise les références
+        this._leftCube = null;
+        this._rightCube = null;
+        this._obstacle = null;
+        this._enemies = [];
+
+        // Réinitialise le compteur
+        this._cubeCounter.reset();
+
+        // Crée les nouveaux cubes selon le layout
+        this._initializeGridCubes();
+        this._positionCubes();
+
+        // Re-registre les interactions
+        if (this._leftCube) {
+            this._enableCubeInteraction(this._leftCube);
+            this._registerCubeClicks(this._leftCube, () => this._rightCube);
+        }
+        if (this._rightCube) {
+            this._enableCubeInteraction(this._rightCube);
+            this._registerCubeClicks(this._rightCube, () => this._targetingSystem.pickRandomEnemy());
+        }
+        if (this._obstacle) {
+            this._enableCubeInteraction(this._obstacle);
+            this._registerCubeClicks(this._obstacle, () => this._fireFireworksBurst());
+        }
+
+        console.warn('Grille reconstruite');
     }
 }
