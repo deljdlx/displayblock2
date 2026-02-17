@@ -115,11 +115,4 @@ export class TargetCube {
         return this._cube;
     }
 
-    /**
-     * Rend le cube visible (après impact du projectile).
-     * @returns {void}
-     */
-    revealOnImpact() {
-        this._cube.el.style.opacity = '1';
-    }
 }

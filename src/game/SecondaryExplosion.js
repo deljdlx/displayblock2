@@ -32,9 +32,34 @@ export class SecondaryExplosion {
     }
 
     /**
+     * Génère des positions aléatoires dans un rayon donné autour d'une cellule centrale.
+     * Les positions sont clampées aux limites de la grille.
+     *
+     * @param {number} centerCol - Colonne de la cellule centrale
+     * @param {number} centerRow - Ligne de la cellule centrale
+     * @param {number} radius - Rayon en nombre de cellules
+     * @param {number} cols - Nombre de colonnes de la grille
+     * @param {number} rows - Nombre de lignes de la grille
+     * @param {number} count - Nombre de positions à générer
+     * @returns {Array<{col: number, row: number}>}
+     */
+    static generateRandomPositions(centerCol, centerRow, radius, cols, rows, count) {
+        const positions = [];
+        for (let i = 0; i < count; i++) {
+            const offsetCol = Math.floor(Math.random() * (radius * 2 + 1)) - radius;
+            const offsetRow = Math.floor(Math.random() * (radius * 2 + 1)) - radius;
+            positions.push({
+                col: Math.max(0, Math.min(cols - 1, centerCol + offsetCol)),
+                row: Math.max(0, Math.min(rows - 1, centerRow + offsetRow)),
+            });
+        }
+        return positions;
+    }
+
+    /**
      * Retourne la position locale (0-3) dans la grille 2x2 basée sur l'index du cube.
      * 0 = haut-gauche, 1 = haut-droite, 2 = bas-gauche, 3 = bas-droite
-     * 
+     *
      * @param {number} cubeIndex - Index du cube (0-9)
      * @returns {{subCol: number, subRow: number}}
      */

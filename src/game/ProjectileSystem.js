@@ -150,16 +150,19 @@ export class ProjectileSystem {
         this._activeProjectiles.add(motion);
         this._clock.add(this._tick);
 
-        source.animateSize(
-            this._cellSize * ANIMATION_CONFIG.sourceFireScaleUp,
-            this._cellSize * ANIMATION_CONFIG.sourceFireScaleUp,
-            this._cellSize * ANIMATION_CONFIG.sourceFireScaleUp,
-            ANIMATION_CONFIG.fireAnimationDuration,
-        );
-        source.onTransitionEnd(() => {
-            source.clearFaceTransition();
-            source.setSize(this._cellSize, this._cellSize, this._cellSize);
-        });
+        // Animation de recul du cube source (optionnelle si source est un simple point d'impact)
+        if (typeof source.animateSize === 'function') {
+            source.animateSize(
+                this._cellSize * ANIMATION_CONFIG.sourceFireScaleUp,
+                this._cellSize * ANIMATION_CONFIG.sourceFireScaleUp,
+                this._cellSize * ANIMATION_CONFIG.sourceFireScaleUp,
+                ANIMATION_CONFIG.fireAnimationDuration,
+            );
+            source.onTransitionEnd(() => {
+                source.clearFaceTransition();
+                source.setSize(this._cellSize, this._cellSize, this._cellSize);
+            });
+        }
     }
 
     /**

@@ -100,16 +100,6 @@ export class GridCellManager {
     }
 
     /**
-     * Récupère tous les cubes d'une cellule.
-     * @param {number} col - Colonne
-     * @param {number} row - Ligne
-     * @returns {Array<Object>} Tableau de cubes {cube, type}
-     */
-    getCubesInCell(col, row) {
-        return this.getCellContent(col, row);
-    }
-
-    /**
      * Supprime tous les cubes d'une cellule.
      * @param {number} col - Colonne
      * @param {number} row - Ligne

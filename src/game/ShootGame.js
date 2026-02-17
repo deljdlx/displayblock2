@@ -24,7 +24,7 @@ import { GridCellManager } from './GridCellManager.js';
 import { DropMissileSystem } from './DropMissileSystem.js';
 import { SecondaryExplosion } from './SecondaryExplosion.js';
 import {
-    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS, SIZE_FACTORS,
+    GRID_CONFIG, ANIMATION_CONFIG, MISSILE_CONFIGS,
 } from './config/Constants.js';
 
 export class ShootGame {
@@ -182,7 +182,6 @@ export class ShootGame {
         this._cellManager = new GridCellManager(this._columns, this._rows);
         this._grid = new Grid(this._columns, this._rows, this._cellSize);
         this._scene.add(this._grid);
-        this._disableGridPointerEvents();
 
         this._cubes = new Map();
         this._initializeGridCubes();
@@ -191,6 +190,17 @@ export class ShootGame {
             default: MISSILE_CONFIGS.default,
         };
 
+        this._initializeSystems();
+        this._initializeUI();
+        this._setupEventListeners();
+    }
+
+    /**
+     * Initialise les systèmes de jeu: horloge, explosions, impacts, projectiles, drop missiles, ciblage.
+     * @returns {void}
+     * @private
+     */
+    _initializeSystems() {
         this._clock = new AnimationClock();
         this._impactSystem = new ImpactShakeSystem(this._cellSize);
         this._explosionSystem = new ExplosionSystem(this._scene, this._clock, this._cellSize, this._groundY);
@@ -218,24 +228,33 @@ export class ShootGame {
 
         this._targetingSystem = new TargetingSystem(this._enemies);
         this._controls = new OrbitControls(this._viewport);
+    }
 
-        // Initialise le système de comptage des cubes cibles
+    /**
+     * Initialise l'interface utilisateur: compteur de cubes, stats, tours.
+     * @returns {void}
+     * @private
+     */
+    _initializeUI() {
         this._cubeCounter = new TargetCubeCounter();
         this._stats = new TargetCubeStats(this._cubeCounter, document.body);
 
-        // Initialise le système de gestion des tours
         this._turnManager = new GameTurnManager();
         this._turnUI = new GameTurnUI(() => {
             this._turnManager.nextTurn();
         });
+    }
 
-        // S'abonne aux événements de début de tour pour déclencher les feux d'artifice
+    /**
+     * Enregistre les écouteurs d'événements globaux: début de tour et clic sur la grille.
+     * @returns {void}
+     * @private
+     */
+    _setupEventListeners() {
         this._turnManager.subscribeTurnStarted(() => {
             this._fireFireworksBurst();
         });
 
-        // Ajoute l'écouteur de clic sur viewport (avant db-camera dans la hiérarchie)
-        // Les événements passent même si db-camera a pointer-events: none
         this._viewport.el.addEventListener('pointerdown', (event) => {
             this._handleGridClick(event);
         });
@@ -246,8 +265,15 @@ export class ShootGame {
      */
     init() {
         this._positionCubes();
-        
-        // Active les interactions seulement pour les cubes qui existent dans le layout
+        this._setupCubeInteractions();
+    }
+
+    /**
+     * Active les interactions (pointer events + handlers de clic) pour les cubes du layout.
+     * @returns {void}
+     * @private
+     */
+    _setupCubeInteractions() {
         if (this._leftCube) {
             this._enableCubeInteraction(this._leftCube);
             this._registerCubeClicks(this._leftCube, () => this._rightCube);
@@ -313,14 +339,6 @@ export class ShootGame {
     }
 
     /**
-     * @returns {void}
-     */
-    _disableGridPointerEvents() {
-        // Grid pointer events managed by CSS rules
-        // .db-grid-cell has pointer-events: auto !important
-    }
-
-    /**
      * @param {Cube} cube
      * @returns {void}
      */
@@ -356,65 +374,48 @@ export class ShootGame {
     }
 
     /**
-     * Lance un feu d'artifice: 10 projectiles vers des positions aléatoires.
-     * Chaque cube cible a un type aléatoire, est placé dans une cellule de la grille,
-     * et est enregistré dans le gestionnaire de cellules et le compteur.
+     * Lance un feu d'artifice: N projectiles vers des positions aléatoires.
      * @returns {void}
      */
     _fireFireworksBurst() {
         for (let i = 0; i < ANIMATION_CONFIG.fireworksCount; i++) {
-            const targetCube = new TargetCube();
-            const randomCol = Math.floor(Math.random() * this._columns);
-            const randomRow = Math.floor(Math.random() * this._rows);
-
-            // Taille identique aux cubes d'explosion secondaire: cellSize/2 - 2px de marge
-            const newCubeSize = (this._cellSize / 2) - 2;
-            targetCube.getCube().setSize(newCubeSize, newCubeSize, newCubeSize);
-
-            // Ajoute le cube à la cellule de la grille
-            const stackIndex = this._cellManager.addCubeToCell(randomCol, randomRow, targetCube.getCube(), targetCube.getType());
-            targetCube.placeInCell(randomCol, randomRow, stackIndex);
-
-            // Sous-position dans la grille 2x2 (même logique que _createSecondaryExplosion)
-            const subPos = SecondaryExplosion.getSubPosition(stackIndex);
-            const level = Math.floor(stackIndex / 4);
-
-            this._updateCubePosition3DWithSubPosition(
-                targetCube,
-                subPos.subCol,
-                subPos.subRow,
-                level,
-            );
-
-            this._scene.add(targetCube.getCube());
-
-            // Notifie le compteur qu'un cube cible a été créé
-            this._cubeCounter.increment(targetCube.getType());
-
+            const col = Math.floor(Math.random() * this._columns);
+            const row = Math.floor(Math.random() * this._rows);
+            const targetCube = this._createAndPlaceTargetCube(col, row);
             this._projectileSystem.fire(this._obstacle, targetCube.getCube(), this._missileConfigs.default);
         }
     }
 
     /**
-     * Met à jour la position 3D d'un cube cible basée sur sa cellule et son indice dans la pile.
-     * @param {TargetCube} targetCube - Le cube cible à positionner
-     * @returns {void}
+     * Crée un TargetCube, le dimensionne, le place dans la cellule et l'ajoute à la scène.
+     * @param {number} col - Colonne de la cellule cible
+     * @param {number} row - Ligne de la cellule cible
+     * @returns {TargetCube} Le cube créé (pour que l'appelant puisse lancer le projectile)
      * @private
      */
-    _updateCubePosition3D(targetCube) {
-        const col = targetCube.getGridColumn();
-        const row = targetCube.getGridRow();
-        const stackIndex = targetCube.getStackIndex();
-        
-        const worldPos = this._grid.cellToWorld(col, row);
-        
-        // Hauteur: le centre du cube doit être à -(cubeSize/2) pour reposer sur la grille (Y négatif = au-dessus)
-        // L'empilement va vers le haut (Y de plus en plus négatif)
-        const cubeSize = this._cellSize * SIZE_FACTORS.targetCube;
-        const baseHeight = -(cubeSize / 2);
-        const stackHeight = baseHeight - (stackIndex * cubeSize);
+    _createAndPlaceTargetCube(col, row) {
+        const targetCube = new TargetCube();
 
-        targetCube.getCube().setPosition(worldPos.x, stackHeight, worldPos.z);
+        const newCubeSize = (this._cellSize / 2) - 2;
+        targetCube.getCube().setSize(newCubeSize, newCubeSize, newCubeSize);
+
+        const stackIndex = this._cellManager.addCubeToCell(col, row, targetCube.getCube(), targetCube.getType());
+        targetCube.placeInCell(col, row, stackIndex);
+
+        const subPos = SecondaryExplosion.getSubPosition(stackIndex);
+        const level = Math.floor(stackIndex / 4);
+
+        this._updateCubePosition3DWithSubPosition(
+            targetCube,
+            subPos.subCol,
+            subPos.subRow,
+            level,
+        );
+
+        this._scene.add(targetCube.getCube());
+        this._cubeCounter.increment(targetCube.getType());
+
+        return targetCube;
     }
 
     /**
@@ -544,19 +545,7 @@ export class ShootGame {
         this._initializeGridCubes();
         this._positionCubes();
 
-        // Re-registre les interactions
-        if (this._leftCube) {
-            this._enableCubeInteraction(this._leftCube);
-            this._registerCubeClicks(this._leftCube, () => this._rightCube);
-        }
-        if (this._rightCube) {
-            this._enableCubeInteraction(this._rightCube);
-            this._registerCubeClicks(this._rightCube, () => this._targetingSystem.pickRandomEnemy());
-        }
-        if (this._obstacle) {
-            this._enableCubeInteraction(this._obstacle);
-            this._registerCubeClicks(this._obstacle, () => this._fireFireworksBurst());
-        }
+        this._setupCubeInteractions();
 
         console.warn('Grille reconstruite');
     }
@@ -580,53 +569,22 @@ export class ShootGame {
             this._cellSize,
         );
 
-        // Crée UN SEUL TargetCube dans la cellule d'impact
-        const targetCube = new TargetCube();
-
-        // Définit la taille du cube: cellSize/2 - 2px de marge
-        const newCubeSize = (this._cellSize / 2) - 2;
-        targetCube.getCube().setSize(newCubeSize, newCubeSize, newCubeSize);
-
-        // Ajoute le cube à la cellule d'impact
-        const stackIndex = this._cellManager.addCubeToCell(
+        // Génère 10 positions aléatoires dans un rayon de 3 cellules autour de l'impact
+        const positions = SecondaryExplosion.generateRandomPositions(
             impact.col,
             impact.row,
-            targetCube.getCube(),
-            targetCube.getType(),
-        );
-        targetCube.placeInCell(impact.col, impact.row, stackIndex);
-
-        // Récupère la sous-position dans la grille 2x2 basée sur stackIndex
-        const subPos = SecondaryExplosion.getSubPosition(stackIndex);
-
-        // Calcule le niveau d'empilement: 0-3 → niveau 0, 4-7 → niveau 1, 8-9 → niveau 2
-        const level = Math.floor(stackIndex / 4);
-
-        // Positionne le cube dans la scène
-        this._updateCubePosition3DWithSubPosition(
-            targetCube,
-            subPos.subCol,
-            subPos.subRow,
-            level,
+            3,
+            this._columns,
+            this._rows,
+            ANIMATION_CONFIG.fireworksCount,
         );
 
-        // Ajoute à la scène
-        this._scene.add(targetCube.getCube());
+        // Source temporaire au point d'impact pour les tirs de projectiles
+        const impactSource = { position: { x: impactX, y: 0, z: impactZ } };
 
-        // Notifie le compteur qu'un cube cible a été créé
-        this._cubeCounter.increment(targetCube.getType());
-
-        // Lance un projectile depuis le point d'impact vers ce TargetCube
-        const impactSource = {
-            position: {
-                x: impactX,
-                y: 0,
-                z: impactZ,
-            },
-            animateSize: () => {},
-            onTransitionEnd: () => {},
-            clearFaceTransition: () => {},
-        };
-        this._projectileSystem.fire(impactSource, targetCube.getCube(), this._missileConfigs.default);
+        for (const pos of positions) {
+            const targetCube = this._createAndPlaceTargetCube(pos.col, pos.row);
+            this._projectileSystem.fire(impactSource, targetCube.getCube(), this._missileConfigs.default);
+        }
     }
 }
