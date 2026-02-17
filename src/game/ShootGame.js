@@ -231,8 +231,8 @@ export class ShootGame {
             this._fireFireworksBurst();
         });
 
-        // Ajoute l'écouteur de clic sur la grille pour les missiles qui tombent
-        this._grid.el.addEventListener('pointerdown', (event) => {
+        // Ajoute l'écouteur de clic sur le viewport (pas la grille) pour les missiles qui tombent
+        this._viewport.el.addEventListener('pointerdown', (event) => {
             this._handleGridClick(event);
         });
     }
@@ -242,13 +242,6 @@ export class ShootGame {
      */
     init() {
         this._positionCubes();
-        
-        // Réactive les événements pointeur sur la grille et les cellules pour détecter les clics
-        this._grid.el.style.pointerEvents = 'auto';
-        const gridCells = this._grid.el.querySelectorAll('.db-grid-cell');
-        for (const cell of gridCells) {
-            cell.style.pointerEvents = 'auto';
-        }
         
         // Active les interactions seulement pour les cubes qui existent dans le layout
         if (this._leftCube) {
@@ -320,10 +313,9 @@ export class ShootGame {
      */
     _disableGridPointerEvents() {
         this._grid.el.style.pointerEvents = 'none';
-        const gridCells = this._grid.el.querySelectorAll('.db-grid-cell');
-        for (const cell of gridCells) {
-            cell.style.pointerEvents = 'none';
-        }
+        // Note: Do NOT disable pointer events on grid cells themselves
+        // Grid cells need to remain interactive for click detection
+        // Events bubble up to viewport listener for handling
     }
 
     /**
@@ -419,14 +411,28 @@ export class ShootGame {
         event.preventDefault();
         event.stopPropagation();
 
-        // Trouve la cellule cliquée en remontant l'arbre DOM
-        const clickedCell = event.target.closest('.db-grid-cell');
+        // Essaie de trouver la cellule cliquée
+        let clickedCell = event.target;
+        
+        // Si ce n'est pas directement une cellule, remonte l'arbre DOM
+        if (!clickedCell.classList.contains('db-grid-cell')) {
+            clickedCell = clickedCell.closest('.db-grid-cell');
+        }
+
+        // Si toujours pas de cellule, on ne traite pas le clic
         if (!clickedCell) {
             return;
         }
 
-        const col = Number(clickedCell.dataset.col);
-        const row = Number(clickedCell.dataset.row);
+        // Récupère les coordonnées de la cellule
+        const col = parseInt(clickedCell.dataset.col, 10);
+        const row = parseInt(clickedCell.dataset.row, 10);
+
+        // Valide les coordonnées
+        if (isNaN(col) || isNaN(row)) {
+            console.warn('Coordonnées de cellule invalides:', { col, row });
+            return;
+        }
 
         // Convertit la coordonnée grille en position world
         const worldPos = this._grid.cellToWorld(col, row);

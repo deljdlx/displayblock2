@@ -44,13 +44,32 @@ export class Grid extends Node {
    * Create all cell divs inside the grid element.
    */
   _buildCells() {
+    // Ajoute une feuille de style pour les cellules avec les propriétés 3D correctes
+    const style = document.createElement('style');
+    style.textContent = `
+      .db-grid-cell {
+        position: absolute;
+        cursor: pointer;
+        pointer-events: auto !important;
+        backface-visibility: visible;
+        background-color: rgba(100, 150, 200, 0.05);
+        border: 1px solid rgba(100, 150, 200, 0.15);
+        box-sizing: border-box;
+        transition: background-color 0.1s ease, border-color 0.1s ease;
+      }
+      .db-grid-cell:hover {
+        background-color: rgba(100, 150, 200, 0.15);
+        border-color: rgba(100, 150, 200, 0.4);
+      }
+    `;
+    document.head.appendChild(style);
+
     for (let row = 0; row < this._rows; row++) {
       for (let col = 0; col < this._cols; col++) {
         const cell = document.createElement('div');
         cell.classList.add('db-grid-cell');
         cell.dataset.col = col;
         cell.dataset.row = row;
-        cell.style.position = 'absolute';
         cell.style.width = `${this._cellSize}px`;
         cell.style.height = `${this._cellSize}px`;
         cell.style.left = `${col * this._cellSize}px`;
